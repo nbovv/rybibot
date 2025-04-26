@@ -5,6 +5,9 @@ import json
 import os
 from datetime import datetime, timedelta
 from dotenv import load_dotenv
+import logging
+logging.basicConfig(level=logging.INFO)
+
 
 load_dotenv()
 TOKEN = os.getenv("TOKEN")
@@ -321,7 +324,7 @@ async def on_message(message):
         if message.author.bot:
             return
 
-        print(f"✉️ Wiadomość od {message.author}: {message.content}")
+        logging.info(f"✉️ Wiadomość od {message.author}: {message.content}")
 
         await bot.process_commands(message)
    
