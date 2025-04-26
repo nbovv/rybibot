@@ -317,7 +317,7 @@ async def sprawdz_zadania():
         save_zadania(guild.id, nowe_zadania)
 
 @bot.event
-    async def on_message(message):
+async def on_message(message):
         if message.author.bot:
             return
 
