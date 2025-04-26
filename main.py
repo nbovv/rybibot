@@ -49,6 +49,7 @@ def ma_dozwolona_role(member: discord.Member):
 async def on_ready():
     print(f"✅ Bot działa jako {bot.user}")
     sprawdz_zadania.start()
+    heartbeat.start()
     await tree.sync()
     print("✅ Slash komendy zsynchronizowane!")
 
@@ -56,7 +57,6 @@ async def on_ready():
 async def heartbeat():
     print(f"💓 Ping: {datetime.utcnow()}")
 
-heartbeat.start()
 
 @bot.event
 async def on_disconnect():
@@ -315,8 +315,8 @@ async def sprawdz_zadania():
                 nowe_zadania.append(z)
 
         save_zadania(guild.id, nowe_zadania)
-   
-    @bot.event
+
+@bot.event
     async def on_message(message):
         if message.author.bot:
             return
@@ -324,7 +324,8 @@ async def sprawdz_zadania():
         print(f"✉️ Wiadomość od {message.author}: {message.content}")
 
         await bot.process_commands(message)
-
+   
+    
 # keep_alive()
 
 # Uruchomienie bota
