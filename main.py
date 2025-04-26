@@ -5,6 +5,22 @@ import json
 import os
 from datetime import datetime, timedelta
 from dotenv import load_dotenv
+from flask import Flask
+from threading import Thread
+
+app = Flask('')
+
+@app.route('/')
+def home():
+    return "Bot działa!"
+
+def run():
+    app.run(host='0.0.0.0', port=8080)
+
+def keep_alive():
+    t = Thread(target=run)
+    t.start()
+
 
 load_dotenv()
 TOKEN = os.getenv("TOKEN")
@@ -306,6 +322,7 @@ async def sprawdz_zadania():
 
         await bot.process_commands(message)
 
+keep_alive()
 
 # Uruchomienie bota
 bot.run(TOKEN)
