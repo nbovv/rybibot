@@ -5,22 +5,6 @@ import json
 import os
 from datetime import datetime, timedelta
 from dotenv import load_dotenv
-from flask import Flask
-from threading import Thread
-
-app = Flask('')
-
-@app.route('/')
-def home():
-    return "Bot działa!"
-
-def run():
-    app.run(host='0.0.0.0', port=8080)
-
-def keep_alive():
-    t = Thread(target=run)
-    t.start()
-
 
 load_dotenv()
 TOKEN = os.getenv("TOKEN")
@@ -67,6 +51,25 @@ async def on_ready():
     sprawdz_zadania.start()
     await tree.sync()
     print("✅ Slash komendy zsynchronizowane!")
+
+@tasks.loop(minutes=5)
+async def heartbeat():
+    print(f"💓 Ping: {datetime.utcnow()}")
+
+heartbeat.start()
+
+@bot.event
+async def on_disconnect():
+    print("⚡ Bot utracił połączenie!")
+
+@bot.event
+async def on_resumed():
+    print("✅ Bot ponownie połączony!")
+
+@bot.event
+async def on_error(event, *args, **kwargs):
+    print(f"❌ Błąd w evencie: {event}")
+
 
 # Komenda /pomoc
 @tree.command(name="pomoc", description="Wyświetla listę komend")
@@ -322,7 +325,7 @@ async def sprawdz_zadania():
 
         await bot.process_commands(message)
 
-keep_alive()
+# keep_alive()
 
 # Uruchomienie bota
 bot.run(TOKEN)
