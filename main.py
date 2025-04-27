@@ -1,6 +1,6 @@
 import discord
 from discord.ext import commands, tasks
-from discord import app_commands
+from discord import app_commands, Message
 import json
 import os
 from datetime import datetime, timedelta
@@ -16,6 +16,8 @@ intents = discord.Intents.default()
 intents.message_content = True
 intents.members = True
 intents.guilds = True
+
+ostatnia_wiadomosc: Message = None
 
 bot = commands.Bot(command_prefix="!", intents=intents)
 tree = bot.tree
@@ -59,6 +61,33 @@ async def on_ready():
 @tasks.loop(minutes=5)
 async def heartbeat():
     print(f"💓 Ping: {datetime.utcnow()}")
+
+@tasks.loop(hours=2)
+async def wysylaj_wiadomosc():
+    global ostatnia_wiadomosc
+    channel_id = 1366034718696407090  # <-- zmień na swój prawdziwy ID kanału!
+    message = "WYSYŁAJCIE DWA ZDJĘCIA, W NOCY I ZA DNIA (MOŻECIE POPROSTU ROLETY ZASŁONIĆ)
+
+POJEDYNCZE ZDJĘCIA BĘDĄ KASOWANE I NIE BIORĄ UDZIAŁU W KONKURSIE POPROSTU
+
+KOMENTOWAĆ MOŻECIE TYLKO W WĄTKU
+KOMENTOWANIE POZA WĄTKIEM = MUTE"
+
+    for guild in bot.guilds:
+        channel = guild.get_channel(channel_id)
+        if channel:
+            try:
+                if ostatnia_wiadomosc:
+                    try:
+                        await ostatnia_wiadomosc.delete()
+                        print(f"🗑️ Usunięto poprzednią wiadomość na kanale: {channel.name}")
+                    except Exception as e:
+                        print(f"⚠️ Nie udało się usunąć poprzedniej wiadomości: {e}")
+
+                ostatnia_wiadomosc = await channel.send(message)
+                print(f"✅ Wysłano wiadomość na kanał: {channel.name}")
+            except Exception as e:
+                print(f"❌ Nie udało się wysłać wiadomości: {e}")
 
 
 @bot.event
