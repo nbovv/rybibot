@@ -329,11 +329,6 @@ async def temprole_list(interaction: discord.Interaction):
     await interaction.response.send_message(embed=embeds[0], view=view, ephemeral=True)
 
 
-    zadania = load_zadania(interaction.guild.id)
-    if not zadania:
-        embed = discord.Embed(title="📭 Brak zadań", description="Nie ma żadnych zaplanowanych usunięć ról.", color=discord.Color.blue())
-        await interaction.response.send_message(embed=embed, ephemeral=True)
-        return
 
     embed = discord.Embed(title="📋 Zaplanowane usunięcia ról", color=discord.Color.green())
 
