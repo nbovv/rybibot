@@ -66,12 +66,8 @@ async def heartbeat():
 async def wysylaj_wiadomosc():
     global ostatnia_wiadomosc
     channel_id = 1366034718696407090  # <-- zmień na swój prawdziwy ID kanału!
-    message = "WYSYŁAJCIE DWA ZDJĘCIA, W NOCY I ZA DNIA (MOŻECIE POPROSTU ROLETY ZASŁONIĆ)
-
-POJEDYNCZE ZDJĘCIA BĘDĄ KASOWANE I NIE BIORĄ UDZIAŁU W KONKURSIE POPROSTU
-
-KOMENTOWAĆ MOŻECIE TYLKO W WĄTKU
-KOMENTOWANIE POZA WĄTKIEM = MUTE"
+    message = "WYSYŁAJCIE DWA ZDJĘCIA, W NOCY I ZA DNIA (MOŻECIE POPROSTU ROLETY ZASŁONIĆ) POJEDYNCZE ZDJĘCIA BĘDĄ KASOWANE I NIE BIORĄ UDZIAŁU W KONKURSIE, KOMENTOWAĆ MOŻECIE TYLKO W WĄTKU, KOMENTOWANIE POZA WĄTKIEM = MUTE"
+    
 
     for guild in bot.guilds:
         channel = guild.get_channel(channel_id)
