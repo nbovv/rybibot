@@ -49,6 +49,35 @@ def ma_dozwolona_role(member: discord.Member):
         perms.manage_channels
     )
 
+@tasks.loop(minutes=1)
+async def sprawdz_zadania():
+    for guild in bot.guilds:
+        zadania = load_zadania(guild.id)
+        nowe_zadania = []
+        for zadanie in zadania:
+            user_id = zadanie["user_id"]
+            role_id = zadanie["role_id"]
+            usun_o = datetime.fromisoformat(zadanie["usun_o"])
+
+            member = guild.get_member(user_id)
+            role = guild.get_role(role_id)
+
+            if member and role:
+                if datetime.utcnow() >= usun_o:
+                    try:
+                        await member.remove_roles(role)
+                        print(f"✅ Usunięto rolę {role.name} użytkownikowi {member.display_name}")
+                    except Exception as e:
+                        print(f"⚠️ Błąd przy usuwaniu roli: {e}")
+                else:
+                    nowe_zadania.append(zadanie)
+            else:
+                # Jeśli użytkownika lub roli nie ma, nie przenosimy zadania dalej
+                print(f"⚠️ Użytkownik lub rola nie istnieje w guild {guild.name}")
+        
+        save_zadania(guild.id, nowe_zadania)
+
+
 # Event on_ready
 @bot.event
 async def on_ready():
@@ -84,6 +113,11 @@ async def wysylaj_wiadomosc():
                 print(f"✅ Wysłano wiadomość na kanał: {channel.name}")
             except Exception as e:
                 print(f"❌ Nie udało się wysłać wiadomości: {e}")
+
+@bot.event
+async def on_ready():
+    print(f"✅ Zalogowano jako {bot.user}")
+    wysylaj_wiadomosc.start()
 
 
 @bot.event
