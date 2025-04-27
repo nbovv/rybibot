@@ -73,6 +73,42 @@ async def on_resumed():
 async def on_error(event, *args, **kwargs):
     print(f"❌ Błąd w evencie: {event}")
 
+@bot.event
+async def on_message(message):
+    if message.author.bot:
+        return  # Ignoruj boty
+
+    # ID kanału, na którym ma działać (wstaw tutaj prawdziwe ID kanału)
+    allowed_channel_id = [1366028979219206175, 1366029068562206831]
+
+    if message.channel.id not in allowed_channel_id:
+        await bot.process_commands(message)  # Pozwól działać normalnie komendom
+        return
+
+    # Treść wiadomości
+    content = message.content
+    author = message.author
+
+    # Usuwanie oryginalnej wiadomości
+    await message.delete()
+
+    # Tworzenie embeda
+    embed = discord.Embed(
+        description=content,
+        color=discord.Color.blue()
+    )
+    embed.set_author(name=f"{author.display_name} | APL", icon_url=author.avatar.url)
+
+    # Wysyłanie embeda
+    msg = await message.channel.send(embed=embed)
+
+    # Dodawanie reakcji
+    await msg.add_reaction('✅')
+    await msg.add_reaction('❌')
+
+    # Obsługa komend jeśli wiadomość miała być komendą
+    await bot.process_commands(message)
+
 
 # Komenda /pomoc
 @tree.command(name="pomoc", description="Wyświetla listę komend")
