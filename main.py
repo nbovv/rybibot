@@ -84,6 +84,7 @@ async def on_ready():
     print(f"✅ Bot działa jako {bot.user}")
     sprawdz_zadania.start()
     heartbeat.start()
+    wysylaj_wiadomosc.start()
     await tree.sync()
     print("✅ Slash komendy zsynchronizowane!")
 
@@ -120,10 +121,6 @@ async def wysylaj_wiadomosc():
             except Exception as e:
                 print(f"❌ Nie udało się wysłać wiadomości: {e}")
 
-@bot.event
-async def on_ready():
-    print(f"✅ Zalogowano jako {bot.user}")
-    wysylaj_wiadomosc.start()
 
 
 @bot.event
