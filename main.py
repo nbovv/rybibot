@@ -196,11 +196,67 @@ async def temprole_cancel_role(interaction: discord.Interaction, role: discord.R
     await interaction.response.send_message(embed=embed, ephemeral=True)
 
 # Komenda /temprole_list
+class PaginatorView(discord.ui.View):
+    def __init__(self, interaction: discord.Interaction, embeds: list):
+        super().__init__(timeout=180)
+        self.embeds = embeds
+        self.interaction = interaction
+        self.current_page = 0
+
+    @discord.ui.button(label="⬅️", style=discord.ButtonStyle.secondary)
+    async def previous(self, interaction: discord.Interaction, button: discord.ui.Button):
+        if interaction.user != self.interaction.user:
+            await interaction.response.send_message("❌ Nie możesz używać tych przycisków.", ephemeral=True)
+            return
+
+        self.current_page = (self.current_page - 1) % len(self.embeds)
+        await interaction.response.edit_message(embed=self.embeds[self.current_page], view=self)
+
+    @discord.ui.button(label="➡️", style=discord.ButtonStyle.secondary)
+    async def next(self, interaction: discord.Interaction, button: discord.ui.Button):
+        if interaction.user != self.interaction.user:
+            await interaction.response.send_message("❌ Nie możesz używać tych przycisków.", ephemeral=True)
+            return
+
+        self.current_page = (self.current_page + 1) % len(self.embeds)
+        await interaction.response.edit_message(embed=self.embeds[self.current_page], view=self)
+
 @tree.command(name="temprole_list", description="Wyświetl listę zaplanowanych usunięć ról")
 async def temprole_list(interaction: discord.Interaction):
     if not ma_dozwolona_role(interaction.user):
-        await interaction.response.send_message(embed=discord.Embed(title="Brak uprawnień", description="❌ Nie masz uprawnień.", color=discord.Color.red()), ephemeral=True)
+        await interaction.response.send_message(embed=discord.Embed(
+            title="Brak uprawnień",
+            description="❌ Nie masz uprawnień.",
+            color=discord.Color.red()
+        ), ephemeral=True)
         return
+
+    zadania = load_zadania(interaction.guild.id)
+    if not zadania:
+        embed = discord.Embed(title="📭 Brak zadań", description="Nie ma żadnych zaplanowanych usunięć ról.", color=discord.Color.blue())
+        await interaction.response.send_message(embed=embed, ephemeral=True)
+        return
+
+    embeds = []
+    per_page = 10
+    for i in range(0, len(zadania), per_page):
+        embed = discord.Embed(title="📋 Zaplanowane usunięcia ról", color=discord.Color.green())
+        for zadanie in zadania[i:i+per_page]:
+            member = interaction.guild.get_member(zadanie["user_id"])
+            role = interaction.guild.get_role(zadanie["role_id"])
+            czas_usuniecia = datetime.fromisoformat(zadanie["usun_o"]).strftime("%d.%m.%Y %H:%M:%S")
+            if member and role:
+                embed.add_field(
+                    name=f"{member.display_name}",
+                    value=f"Rola: `{role.name}`\nUsunięcie: `{czas_usuniecia}`",
+                    inline=False
+                )
+        embed.set_footer(text=f"Strona {i//per_page+1}/{(len(zadania)-1)//per_page+1}")
+        embeds.append(embed)
+
+    view = PaginatorView(interaction, embeds)
+    await interaction.response.send_message(embed=embeds[0], view=view, ephemeral=True)
+
 
     zadania = load_zadania(interaction.guild.id)
     if not zadania:
