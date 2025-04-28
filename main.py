@@ -314,6 +314,8 @@ async def temprole_list(interaction: discord.Interaction):
         )
         return
 
+    embeds = []  # <-- dodaj to
+
     embed = discord.Embed(title="📄 Tymczasowe Role", color=discord.Color.blue())
 
     for zadanie in zadania:
@@ -330,6 +332,11 @@ async def temprole_list(interaction: discord.Interaction):
                 value=f"🎭 Rola: {role.name}\n⏰ Usunięcie: <t:{int(datetime.fromisoformat(usun_o).timestamp())}:R>",
                 inline=False
             )
+
+    embeds.append(embed)  # <-- dodaj to
+
+    view = PaginatorView(interaction, embeds)
+    await interaction.response.send_message(embed=embeds[0], view=view, ephemeral=True)
     
 
 
