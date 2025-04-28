@@ -497,7 +497,7 @@ zadania.append({
     "role_id": rola_warn.id,
     "usun_o": czas_usuniecia.isoformat()
 })
-        save_zadania(interaction.guild.id, zadania)
+save_zadania(interaction.guild.id, zadania)
 
         # Wysłanie embeda o zwykłym warnie
         embed = discord.Embed(title="⚠️ Ostrzeżenie", color=discord.Color.orange())
