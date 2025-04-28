@@ -173,8 +173,8 @@ async def pomoc(interaction: discord.Interaction):
     embed.add_field(name="/temprole_cancel", value="Anuluj zaplanowane usunięcie roli użytkownika.", inline=False)
     embed.add_field(name="/temprole_cancel_role", value="Anuluj zaplanowane usunięcie roli dla wszystkich.", inline=False)
     embed.add_field(name="/temprole_list", value="Wyświetl listę zaplanowanych usunięć ról.", inline=False)
-    embed.add_field(name="/warn", value="Nadaj ostrzeżenie użytkownikowi.", inline=False)
-    embed.add_field(name="/unwarn", value="Usuń ostrzeżenie od użytkownika.", inline=False)
+    embed.add_field(name="/", value="Nadaj ostrzeżenie użytkownikowi.", inline=False)
+    embed.add_field(name="/un", value="Usuń ostrzeżenie od użytkownika.", inline=False)
     await interaction.response.send_message(embed=embed, ephemeral=True)
 
 # Komenda /temprole
