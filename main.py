@@ -314,11 +314,11 @@ async def temprole_list(interaction: discord.Interaction):
         )
         return
 
-    embeds = []  # <-- dodaj to
+    embeds = []
+    per_embed_limit = 25
+    current_embed = discord.Embed(title="📄 Tymczasowe Role", color=discord.Color.blue())
 
-    embed = discord.Embed(title="📄 Tymczasowe Role", color=discord.Color.blue())
-
-    for zadanie in zadania:
+    for idx, zadanie in enumerate(zadania, start=1):
         user_id = zadanie["user_id"]
         role_id = zadanie["role_id"]
         usun_o = zadanie["usun_o"]
@@ -327,16 +327,18 @@ async def temprole_list(interaction: discord.Interaction):
         role = interaction.guild.get_role(role_id)
 
         if member and role:
-            embed.add_field(
-                name=f"👤 {member}",
+            current_embed.add_field(
+                name=f"👤 {member.display_name}",
                 value=f"🎭 Rola: {role.name}\n⏰ Usunięcie: <t:{int(datetime.fromisoformat(usun_o).timestamp())}:R>",
                 inline=False
             )
 
-    embeds.append(embed)  # <-- dodaj to
+            if len(current_embed.fields) >= per_embed_limit:
+                embeds.append(current_embed)
+                current_embed = discord.Embed(title="📄 Tymczasowe Role (kontynuacja)", color=discord.Color.blue())
 
-    view = PaginatorView(interaction, embeds)
-    await interaction.response.send_message(embed=embeds[0], view=view, ephemeral=True)
+    if len(current_embed.fields) > 0:
+        embeds.append(current_embed)
     
 
 
