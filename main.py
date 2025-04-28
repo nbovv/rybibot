@@ -493,19 +493,19 @@ await interaction.channel.send(
 
 
         # Wysłanie embeda o zwykłym warnie
-    embed = discord.Embed(title="⚠️ Ostrzeżenie", color=discord.Color.orange())
-    embed.add_field(name="Użytkownik", value=member.mention, inline=False)
-    embed.add_field(name="Warn", value=f"{nowy_warn}/3", inline=True)
-    embed.add_field(name="Powód", value=powod, inline=False)
+        embed = discord.Embed(title="⚠️ Ostrzeżenie", color=discord.Color.orange())
+        embed.add_field(name="Użytkownik", value=member.mention, inline=False)
+        embed.add_field(name="Warn", value=f"{nowy_warn}/3", inline=True)
+        embed.add_field(name="Powód", value=powod, inline=False)
 
-    await interaction.channel.send(content=member.mention, embed=embed, allowed_mentions=discord.AllowedMentions(users=True))
+        await interaction.channel.send(content=member.mention, embed=embed, allowed_mentions=discord.AllowedMentions(users=True))
 
 
 
-    await interaction.response.send_message(
+        await interaction.response.send_message(
         embed=discord.Embed(title="✅ Ostrzeżenia nadane", description="Wysłano wszystkie ostrzeżenia.", color=discord.Color.green()),
         ephemeral=True
-    )
+        )
 
 
 
