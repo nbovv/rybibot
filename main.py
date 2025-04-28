@@ -436,7 +436,7 @@ async def warn(interaction: discord.Interaction, members: str, powod: str, month
         embed.add_field(name="Warn", value=f"{nowy_warn}/3", inline=True)
         embed.add_field(name="Powód", value=powod, inline=False)
         # Jeżeli po nadaniu warna użytkownik osiąga 3/3, a wcześniej miał mniej
-        if nowy_warn == 3 and obecny_warn < 3:
+        if nowy_warn == 3 and obecny_warn == 2:
             try:
                 print(f"✅ Próba nadania timeouta użytkownikowi {member.display_name}")
                 if not member.timed_out_until or member.timed_out_until < datetime.utcnow():
