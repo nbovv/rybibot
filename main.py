@@ -490,13 +490,13 @@ await interaction.channel.send(
 )
 
 
-        czas_usuniecia = datetime.utcnow() + timedelta(days=30 * months)
-        zadania.append({
-            "user_id": member.id,
-            "guild_id": interaction.guild.id,
-            "role_id": rola_warn.id,
-            "usun_o": czas_usuniecia.isoformat()
-        })
+czas_usuniecia = datetime.utcnow() + timedelta(days=30 * months)
+zadania.append({
+    "user_id": member.id,
+    "guild_id": interaction.guild.id,
+    "role_id": rola_warn.id,
+    "usun_o": czas_usuniecia.isoformat()
+})
         save_zadania(interaction.guild.id, zadania)
 
         # Wysłanie embeda o zwykłym warnie
