@@ -495,13 +495,6 @@ async def show_files(interaction: discord.Interaction):
         )
 
 
-# Zadanie sprawdzające zaplanowane akcje
-@tasks.loop(seconds=10)
-async def sprawdz_zadania():
-    for guild in bot.guilds:
-        zadania = load_zadania(guild.id)
-        nowe_zadania = []
-        teraz = datetime.utcnow()
 
         for z in zadania:
             czas_usuniecia = datetime.fromisoformat(z["usun_o"])
