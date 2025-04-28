@@ -364,8 +364,8 @@ async def temprole_list(interaction: discord.Interaction):
 import typing
 
 @tree.command(name="warn", description="Nadaj ostrzeżenie użytkownikowi (lub wielu użytkownikom)")
-@app_commands.describe(members="Użytkownik lub użytkownicy do ostrzeżenia", powod="Powód", months="Liczba miesięcy (domyślnie 4)")
-async def warn(interaction: discord.Interaction, members: typing.List[discord.Member], powod: str, months: int = 4):
+@app_commands.describe(members="Wzmianki użytkowników oddzielone spacją", powod="Powód", months="Liczba miesięcy (domyślnie 4)")
+async def warn(interaction: discord.Interaction, members: str, powod: str, months: int = 4):
     if not ma_dozwolona_role(interaction.user):
         await interaction.response.send_message(
             embed=discord.Embed(title="Brak uprawnień", description="❌ Nie masz uprawnień.", color=discord.Color.red()),
@@ -375,7 +375,26 @@ async def warn(interaction: discord.Interaction, members: typing.List[discord.Me
 
     zadania = load_zadania(interaction.guild.id)
 
-    for member in members:
+    # Przetwarzanie wzmianek na listę użytkowników
+    member_ids = []
+    for part in members.split():
+        if part.startswith("<@") and part.endswith(">"):
+            part = part.replace("<@", "").replace("!", "").replace(">", "")
+            if part.isdigit():
+                member_ids.append(int(part))
+
+    if not member_ids:
+        await interaction.response.send_message(
+            embed=discord.Embed(title="Błąd", description="❌ Nie wykryto żadnych użytkowników we wpisanym polu.", color=discord.Color.red()),
+            ephemeral=True
+        )
+        return
+
+    for member_id in member_ids:
+        member = interaction.guild.get_member(member_id)
+        if not member:
+            continue
+
         # Sprawdzanie czy użytkownik miał już 3/3 warn
         mial_3_warn = False
         if discord.utils.get(interaction.guild.roles, name="WARN 3/3") in member.roles:
@@ -391,7 +410,7 @@ async def warn(interaction: discord.Interaction, members: typing.List[discord.Me
 
         nowy_warn = obecny_warn + 1
         if nowy_warn > 3:
-            nowy_warn = 3  # Maksymalnie 3/3 rola
+            nowy_warn = 3
 
         rola_warn = discord.utils.get(interaction.guild.roles, name=f"WARN {nowy_warn}/3")
         if not rola_warn:
@@ -417,7 +436,6 @@ async def warn(interaction: discord.Interaction, members: typing.List[discord.Me
         embed.add_field(name="Warn", value=f"{nowy_warn}/3", inline=True)
         embed.add_field(name="Powód", value=powod, inline=False)
 
-        # Jeśli miał wcześniej 3/3 -> teraz timeout + dopisanie do embeda
         if mial_3_warn:
             try:
                 await member.timeout(duration=timedelta(days=1), reason="Przekroczenie 3/3 WARN — przerwa na 1 dzień")
