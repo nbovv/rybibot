@@ -23,20 +23,38 @@ bot = commands.Bot(command_prefix="!", intents=intents)
 tree = bot.tree
 
 # Funkcje pomocnicze
+import os
+
+# Ścieżka do Persistent Storage
+PERSISTENT_PATH = "/var/data"  # Jeśli masz inny mount path na Renderze, np. /mnt/data, zmień tutaj!
+
+# Funkcje pomocnicze
 def get_zadania_file(guild_id):
-    return f"/var/data/zadania_{guild_id}.json"
+    # Sprawdź czy katalog istnieje
+    if not os.path.exists(PERSISTENT_PATH):
+        os.makedirs(PERSISTENT_PATH)
+        print(f"📁 Utworzono brakujący folder: {PERSISTENT_PATH}")
+    return f"{PERSISTENT_PATH}/zadania_{guild_id}.json"
 
 def load_zadania(guild_id):
     file = get_zadania_file(guild_id)
     if os.path.exists(file):
-        with open(file, "r") as f:
-            return json.load(f)
+        try:
+            with open(file, "r") as f:
+                return json.load(f)
+        except Exception as e:
+            print(f"❌ Błąd podczas ładowania pliku {file}: {e}")
     return []
 
 def save_zadania(guild_id, zadania):
     file = get_zadania_file(guild_id)
-    with open(file, "w") as f:
-        json.dump(zadania, f, indent=4)
+    try:
+        with open(file, "w") as f:
+            json.dump(zadania, f, indent=4)
+        print(f"✅ Zadania zapisane do pliku: {file}")
+    except Exception as e:
+        print(f"❌ Błąd podczas zapisywania pliku {file}: {e}")
+
 
 def ma_dozwolona_role(member: discord.Member):
     perms = member.guild_permissions
