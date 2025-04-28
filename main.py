@@ -23,7 +23,6 @@ bot = commands.Bot(command_prefix="!", intents=intents)
 tree = bot.tree
 
 # Funkcje pomocnicze
-import os
 
 # Ścieżka do Persistent Storage
 PERSISTENT_PATH = "/var/data"  # Jeśli masz inny mount path na Renderze, np. /mnt/data, zmień tutaj!
