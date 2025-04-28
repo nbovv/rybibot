@@ -435,16 +435,15 @@ async def warn(interaction: discord.Interaction, members: typing.List[discord.Me
         embed.add_field(name="Użytkownik", value=member.mention, inline=False)
         embed.add_field(name="Warn", value=f"{nowy_warn}/3", inline=True)
         embed.add_field(name="Powód", value=powod, inline=False)
-
-        # ❗ Nowa logika timeouta
-if nowy_warn == 3:
-    try:
+        if nowy_warn == 3:
+            try:
         # Sprawdzamy czy użytkownik NIE ma obecnie aktywnego timeouta
-        if not member.timed_out_until or member.timed_out_until < datetime.utcnow():
-            await member.timeout(duration=timedelta(days=1), reason="Przekroczenie 3/3 WARN — przerwa na 1 dzień")
-            embed.add_field(name="Akcja", value="🛑 Nadano timeout na **1 dzień** za przekroczenie 3/3 WARN.", inline=False)
-    except Exception as e:
-        print(f"❌ Błąd przy dawaniu timeouta: {e}")
+                if not member.timed_out_until or member.timed_out_until < datetime.utcnow():
+                    await member.timeout(duration=timedelta(days=1), reason="Przekroczenie 3/3 WARN — przerwa na 1 dzień")
+                    embed.add_field(name="Akcja", value="🛑 Nadano timeout na **1 dzień** za przekroczenie 3/3 WARN.", inline=False)
+            except Exception as e:
+                print(f"❌ Błąd przy dawaniu timeouta: {e}")
+
 
 
         await interaction.channel.send(
