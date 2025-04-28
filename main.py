@@ -573,6 +573,51 @@ async def import_zadania(interaction: discord.Interaction, plik: discord.Attachm
             ephemeral=True
         )
 
+@tree.command(name="unmute", description="Usuń rolę Muted użytkownikowi")
+@app_commands.describe(member="Użytkownik, któremu chcesz usunąć Muted")
+async def unmute(interaction: discord.Interaction, member: discord.Member):
+    if not ma_dozwolona_role(interaction.user):
+        await interaction.response.send_message(
+            embed=discord.Embed(
+                title="Brak uprawnień",
+                description="❌ Nie masz uprawnień do używania tej komendy.",
+                color=discord.Color.red()
+            ),
+            ephemeral=True
+        )
+        return
+
+    rola_muted = discord.utils.get(interaction.guild.roles, name="Muted")
+    if not rola_muted:
+        await interaction.response.send_message(
+            embed=discord.Embed(
+                title="Błąd",
+                description="❌ Brak roli `Muted` na serwerze.",
+                color=discord.Color.red()
+            ),
+            ephemeral=True
+        )
+        return
+
+    if rola_muted not in member.roles:
+        await interaction.response.send_message(
+            embed=discord.Embed(
+                title="Informacja",
+                description=f"ℹ️ {member.mention} nie posiada roli `Muted`.",
+                color=discord.Color.blue()
+            ),
+            ephemeral=True
+        )
+        return
+
+    await member.remove_roles(rola_muted)
+
+    embed = discord.Embed(
+        title="✅ Unmute",
+        description=f"Użytkownik {member.mention} został odmutowany.",
+        color=discord.Color.green()
+    )
+    await interaction.response.send_message(embed=embed)
 
 
 @bot.event
