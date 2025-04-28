@@ -593,27 +593,42 @@ async def unmute(interaction: discord.Interaction, member: discord.Member):
         return
 
     rola_muted = discord.utils.get(interaction.guild.roles, name="Muted")
-    if not rola_muted:
-        await interaction.response.send_message(
-            embed=discord.Embed(
-                title="Błąd",
-                description="❌ Brak roli `Muted` na serwerze.",
-                color=discord.Color.red()
-            ),
-            ephemeral=True
-        )
-        return
+if rola_muted:
+    await member.add_roles(rola_muted)
+    await member.remove_roles(rola_warn_3)
 
-    if rola_muted not in member.roles:
-        await interaction.response.send_message(
-            embed=discord.Embed(
-                title="Informacja",
-                description=f"ℹ️ {member.mention} nie posiada roli `Muted`.",
-                color=discord.Color.blue()
-            ),
-            ephemeral=True
-        )
-        return
+    czas_usuniecia = datetime.utcnow() + timedelta(days=1)
+    zadania.append({
+        "user_id": member.id,
+        "guild_id": interaction.guild.id,
+        "role_id": rola_muted.id,
+        "usun_o": czas_usuniecia.isoformat()
+    })
+    save_zadania(interaction.guild.id, zadania)
+    
+    
+    #rola_muted = discord.utils.get(interaction.guild.roles, name="Muted")
+    #if not rola_muted:
+        #await interaction.response.send_message(
+            #embed=discord.Embed(
+                #title="Błąd",
+                #description="❌ Brak roli `Muted` na serwerze.",
+                #color=discord.Color.red()
+            #),
+            #ephemeral=True
+        #)
+        #return
+
+    #if rola_muted not in member.roles:
+        #await interaction.response.send_message(
+            #embed=discord.Embed(
+                #title="Informacja",
+                #description=f"ℹ️ {member.mention} nie posiada roli `Muted`.",
+                #color=discord.Color.blue()
+            #),
+            #ephemeral=True
+        #)
+        #return
 
     await member.remove_roles(rola_muted)
 
