@@ -24,7 +24,7 @@ tree = bot.tree
 
 # Funkcje pomocnicze
 def get_zadania_file(guild_id):
-    return f"zadania_{guild_id}.json"
+    return f"/var/data/zadania_{guild_id}.json"
 
 def load_zadania(guild_id):
     file = get_zadania_file(guild_id)
