@@ -436,7 +436,7 @@ async def warn(interaction: discord.Interaction, members: str, powod: str, month
         embed.add_field(name="Warn", value=f"{nowy_warn}/3", inline=True)
         embed.add_field(name="Powód", value=powod, inline=False)
 
-        if mial_3_warn:
+        if nowy_warn == 3 and obecny_warn < 3:
             try:
                 await member.timeout(duration=timedelta(days=1), reason="Przekroczenie 3/3 WARN — przerwa na 1 dzień")
                 embed.add_field(name="Akcja", value="🛑 Nadano timeout na **1 dzień** za przekroczenie 3/3 WARN.", inline=False)
