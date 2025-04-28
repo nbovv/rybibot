@@ -530,6 +530,47 @@ async def show_files(interaction: discord.Interaction):
 
         save_zadania(guild.id, nowe_zadania)
 
+@tree.command(name="import_zadania", description="Importuj zadania ręcznie z JSON-a (do katalogu /var/data/)")
+@app_commands.describe(guild_id="ID serwera (guild)", json_content="Treść JSON-a jako tekst")
+async def import_zadania(interaction: discord.Interaction, guild_id: str, json_content: str):
+    if not ma_dozwolona_role(interaction.user):
+        await interaction.response.send_message(
+            embed=discord.Embed(
+                title="Brak uprawnień",
+                description="❌ Nie masz uprawnień do tej komendy.",
+                color=discord.Color.red()
+            ),
+            ephemeral=True
+        )
+        return
+
+    try:
+        # Parsowanie JSON-a
+        zadania = json.loads(json_content)
+        
+        # Zapisanie zadania do pliku
+        save_zadania(int(guild_id), zadania)
+
+        await interaction.response.send_message(
+            embed=discord.Embed(
+                title="✅ Import zakończony",
+                description=f"Zaimportowano {len(zadania)} zadań dla serwera `{guild_id}`.",
+                color=discord.Color.green()
+            ),
+            ephemeral=True
+        )
+
+    except Exception as e:
+        await interaction.response.send_message(
+            embed=discord.Embed(
+                title="❌ Błąd importu",
+                description=f"Nie udało się zaimportować danych: {e}",
+                color=discord.Color.red()
+            ),
+            ephemeral=True
+        )
+
+
 @bot.event
 async def on_message(message):
         if message.author.bot:
