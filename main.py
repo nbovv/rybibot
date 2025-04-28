@@ -372,7 +372,7 @@ async def warn(interaction: discord.Interaction, members: str, powod: str, month
 
     zadania = load_zadania(interaction.guild.id)
 
-    # Przetwarzanie wzmianek na listę użytkowników
+    # Przetwarzanie wzmianek
     member_ids = []
     for part in members.split():
         if part.startswith("<@") and part.endswith(">"):
@@ -395,12 +395,28 @@ async def warn(interaction: discord.Interaction, members: str, powod: str, month
             except Exception:
                 continue
 
-        # Sprawdzanie czy użytkownik miał już 3/3 warn
-        mial_3_warn = False
-        if discord.utils.get(interaction.guild.roles, name="WARN 3/3") in member.roles:
-            mial_3_warn = True
+        # Czy użytkownik ma już WARN 3/3?
+        rola_warn_3 = discord.utils.get(interaction.guild.roles, name="WARN 3/3")
+        if rola_warn_3 in member.roles:
+            # Użytkownik już miał WARN 3/3 — daj timeout!
+            try:
+                await member.edit(
+                    timed_out_until=datetime.utcnow() + timedelta(days=1),
+                    reason="Przekroczenie 3/3 WARN — timeout 1 dzień"
+                )
+                await member.remove_roles(rola_warn_3)
 
-        # Usuwanie starego warna
+                embed = discord.Embed(title="🚫 Timeout za 4/3 WARN", color=discord.Color.red())
+                embed.add_field(name="Użytkownik", value=member.mention, inline=False)
+                embed.add_field(name="Akcja", value="🛑 Nadano timeout na **1 dzień** za przekroczenie 3/3 WARN.", inline=False)
+                embed.add_field(name="Powód", value=powod, inline=False)
+
+                await interaction.channel.send(content=member.mention, embed=embed)
+            except Exception as e:
+                print(f"❌ Błąd przy nadawaniu timeouta: {e}")
+            continue  # Przejdź do następnego użytkownika
+
+        # Jeśli nie miał jeszcze 3/3 — normalnie nadajemy warn
         obecny_warn = 0
         for i in range(1, 4):
             rola = discord.utils.get(interaction.guild.roles, name=f"WARN {i}/3")
@@ -430,36 +446,12 @@ async def warn(interaction: discord.Interaction, members: str, powod: str, month
             "usun_o": czas_usuniecia.isoformat()
         })
 
-        # Przygotowanie embed
         embed = discord.Embed(title="⚠️ Ostrzeżenie", color=discord.Color.orange())
         embed.add_field(name="Użytkownik", value=member.mention, inline=False)
         embed.add_field(name="Warn", value=f"{nowy_warn}/3", inline=True)
         embed.add_field(name="Powód", value=powod, inline=False)
-        # Jeżeli po nadaniu warna użytkownik osiąga 3/3, a wcześniej miał mniej
-        if nowy_warn == 3 and obecny_warn == 2:
-            try:
-                print(f"✅ Próba nadania timeouta użytkownikowi {member.display_name}")
-                if not member.timed_out_until or member.timed_out_until < datetime.utcnow():
-                    await member.edit(
-                        timed_out_until=datetime.utcnow() + timedelta(days=1),
-                        reason="Przekroczenie 3/3 WARN — przerwa na 1 dzień"
-                    )
-                    embed.add_field(
-                        name="Akcja",
-                        value="🛑 Nadano timeout na **1 dzień** za przekroczenie 3/3 WARN.",
-                        inline=False
-                    )
-                else:
-                    print(f"ℹ️ Użytkownik {member.display_name} już ma aktywny timeout.")
-            except Exception as e:
-                print(f"❌ Błąd przy dawaniu timeouta użytkownikowi {member.display_name}: {e}")
 
-
-        await interaction.channel.send(
-            content=member.mention,
-            embed=embed,
-            allowed_mentions=discord.AllowedMentions(users=True)
-        )
+        await interaction.channel.send(content=member.mention, embed=embed)
 
     save_zadania(interaction.guild.id, zadania)
 
@@ -467,6 +459,7 @@ async def warn(interaction: discord.Interaction, members: str, powod: str, month
         embed=discord.Embed(title="✅ Ostrzeżenia nadane", description="Wysłano wszystkie ostrzeżenia.", color=discord.Color.green()),
         ephemeral=True
     )
+
 
 
 # Komenda /unwarn
