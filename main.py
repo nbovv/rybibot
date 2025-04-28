@@ -365,7 +365,7 @@ import typing
 
 @tree.command(name="warn", description="Nadaj ostrzeżenie użytkownikowi (lub wielu użytkownikom)")
 @app_commands.describe(members="Wzmianki użytkowników oddzielone spacją", powod="Powód", months="Liczba miesięcy (domyślnie 4)")
-async def warn(interaction: discord.Interaction, members: typing.List[discord.Member], powod: str, months: int = 4):
+async def warn(interaction: discord.Interaction, members: str, powod: str, months: int = 4):
     if not ma_dozwolona_role(interaction.user):
         await interaction.response.send_message(
             embed=discord.Embed(title="Brak uprawnień", description="❌ Nie masz uprawnień.", color=discord.Color.red()),
