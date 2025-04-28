@@ -303,38 +303,35 @@ class PaginatorView(discord.ui.View):
         self.current_page = (self.current_page + 1) % len(self.embeds)
         await interaction.response.edit_message(embed=self.embeds[self.current_page], view=self)
 
-@tree.command(name="temprole_list", description="Wyświetl listę zaplanowanych usunięć ról")
+@tree.command(name="temprole_list", description="Pokaż wszystkie tymczasowe role na serwerze.")
 async def temprole_list(interaction: discord.Interaction):
-    if not ma_dozwolona_role(interaction.user):
-        await interaction.response.send_message(embed=discord.Embed(
-            title="Brak uprawnień",
-            description="❌ Nie masz uprawnień.",
-            color=discord.Color.red()
-        ), ephemeral=True)
-        return
-
     zadania = load_zadania(interaction.guild.id)
+
     if not zadania:
-        embed = discord.Embed(title="📭 Brak zadań", description="Nie ma żadnych zaplanowanych usunięć ról.", color=discord.Color.blue())
-        await interaction.response.send_message(embed=embed, ephemeral=True)
+        await interaction.response.send_message(
+            embed=discord.Embed(title="📄 Tymczasowe Role", description="Brak tymczasowych ról na serwerze.", color=discord.Color.blue()),
+            ephemeral=True
+        )
         return
 
-    embeds = []
-    per_page = 10
-    for i in range(0, len(zadania), per_page):
-        embed = discord.Embed(title="📋 Zaplanowane usunięcia ról", color=discord.Color.green())
-        for zadanie in zadania[i:i+per_page]:
-            member = interaction.guild.get_member(zadanie["user_id"])
-            role = interaction.guild.get_role(zadanie["role_id"])
-            czas_usuniecia = datetime.fromisoformat(zadanie["usun_o"]).strftime("%d.%m.%Y %H:%M:%S")
-            if member and role:
-                embed.add_field(
-                    name=f"{member.display_name}",
-                    value=f"Rola: `{role.name}`\nUsunięcie: `{czas_usuniecia}`",
-                    inline=False
-                )
-        embed.set_footer(text=f"Strona {i//per_page+1}/{(len(zadania)-1)//per_page+1}")
-        embeds.append(embed)
+    embed = discord.Embed(title="📄 Tymczasowe Role", color=discord.Color.blue())
+
+    for zadanie in zadania:
+        user_id = zadanie["user_id"]
+        role_id = zadanie["role_id"]
+        usun_o = zadanie["usun_o"]
+
+        member = interaction.guild.get_member(user_id)
+        role = interaction.guild.get_role(role_id)
+
+        if member and role:
+            embed.add_field(
+                name=f"👤 {member}",
+                value=f"🎭 Rola: {role.name}\n⏰ Usunięcie: <t:{int(datetime.fromisoformat(usun_o).timestamp())}:R>",
+                inline=False
+            )
+    
+
 
     view = PaginatorView(interaction, embeds)
     await interaction.response.send_message(embed=embeds[0], view=view, ephemeral=True)
