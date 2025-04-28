@@ -451,7 +451,7 @@ if obecny_warn == 3:
         )
         embed.add_field(name="Akcja", value="🔴 Timeout + usunięcie roli `WARN 3/3`", inline=False)
         await interaction.channel.send(content=member.mention, embed=embed)
-
+        continue
     except Exception as e:
         print(f"❌ Błąd przy dawaniu timeouta: {e}")
 
@@ -490,14 +490,6 @@ await interaction.channel.send(
 )
 
 
-czas_usuniecia = datetime.utcnow() + timedelta(days=30 * months)
-zadania.append({
-    "user_id": member.id,
-    "guild_id": interaction.guild.id,
-    "role_id": rola_warn.id,
-    "usun_o": czas_usuniecia.isoformat()
-})
-save_zadania(interaction.guild.id, zadania)
 
         # Wysłanie embeda o zwykłym warnie
     embed = discord.Embed(title="⚠️ Ostrzeżenie", color=discord.Color.orange())
@@ -506,6 +498,8 @@ save_zadania(interaction.guild.id, zadania)
     embed.add_field(name="Powód", value=powod, inline=False)
 
     await interaction.channel.send(content=member.mention, embed=embed, allowed_mentions=discord.AllowedMentions(users=True))
+
+
 
     await interaction.response.send_message(
         embed=discord.Embed(title="✅ Ostrzeżenia nadane", description="Wysłano wszystkie ostrzeżenia.", color=discord.Color.green()),
