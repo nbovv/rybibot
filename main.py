@@ -530,9 +530,9 @@ async def show_files(interaction: discord.Interaction):
 
         save_zadania(guild.id, nowe_zadania)
 
-@tree.command(name="import_zadania", description="Importuj zadania ręcznie z JSON-a (do katalogu /var/data/)")
-@app_commands.describe(guild_id="ID serwera (guild)", json_content="Treść JSON-a jako tekst")
-async def import_zadania(interaction: discord.Interaction, guild_id: str, json_content: str):
+@tree.command(name="import_zadania", description="Importuj zadania z pliku JSON do bazy danych")
+@app_commands.describe(plik="Plik JSON do zaimportowania")
+async def import_zadania(interaction: discord.Interaction, plik: discord.Attachment):
     if not ma_dozwolona_role(interaction.user):
         await interaction.response.send_message(
             embed=discord.Embed(
@@ -545,16 +545,17 @@ async def import_zadania(interaction: discord.Interaction, guild_id: str, json_c
         return
 
     try:
-        # Parsowanie JSON-a
-        zadania = json.loads(json_content)
+        zawartosc = await plik.read()
+        tekst = zawartosc.decode('utf-8')
+        dane = json.loads(tekst)
         
-        # Zapisanie zadania do pliku
-        save_zadania(int(guild_id), zadania)
+        guild_id = interaction.guild.id
+        save_zadania(guild_id, dane)
 
         await interaction.response.send_message(
             embed=discord.Embed(
                 title="✅ Import zakończony",
-                description=f"Zaimportowano {len(zadania)} zadań dla serwera `{guild_id}`.",
+                description=f"Zaimportowano {len(dane)} zadań dla serwera `{guild_id}`.",
                 color=discord.Color.green()
             ),
             ephemeral=True
@@ -569,6 +570,7 @@ async def import_zadania(interaction: discord.Interaction, guild_id: str, json_c
             ),
             ephemeral=True
         )
+
 
 
 @bot.event
