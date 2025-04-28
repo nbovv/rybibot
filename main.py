@@ -462,6 +462,40 @@ async def unwarn(interaction: discord.Interaction, member: discord.Member):
 
     await interaction.response.send_message(embed=embed)
 
+@tree.command(name="show_files", description="Pokaż pliki zapisane w katalogu Persistent Storage")
+async def show_files(interaction: discord.Interaction):
+    if not ma_dozwolona_role(interaction.user):
+        await interaction.response.send_message(
+            embed=discord.Embed(
+                title="Brak uprawnień",
+                description="❌ Nie masz uprawnień do tej komendy.",
+                color=discord.Color.red()
+            ),
+            ephemeral=True
+        )
+        return
+
+    try:
+        files = os.listdir("/var/data/")
+        if not files:
+            opis = "Brak plików w katalogu `/var/data/`."
+        else:
+            opis = "\n".join(f"- `{file}`" for file in files)
+
+        embed = discord.Embed(title="📂 Pliki w /var/data/", description=opis, color=discord.Color.blue())
+        await interaction.response.send_message(embed=embed, ephemeral=True)
+
+    except Exception as e:
+        await interaction.response.send_message(
+            embed=discord.Embed(
+                title="❌ Błąd",
+                description=f"Nie udało się odczytać plików: {e}",
+                color=discord.Color.red()
+            ),
+            ephemeral=True
+        )
+
+
 # Zadanie sprawdzające zaplanowane akcje
 @tasks.loop(seconds=10)
 async def sprawdz_zadania():
