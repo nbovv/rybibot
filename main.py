@@ -118,13 +118,6 @@ async def wysylaj_wiadomosc():
 **KOMENTOWANIE POZA WĄTKIEM = MUTE**
 """
 
-@tasks.loop(hours=2)
-async def wysylaj_wiadomosc():
-    global ostatnia_wiadomosc
-    channel_id = 1366521059335213127  # <-- zmień na swój prawdziwy ID kanału!
-    message = "**ZOSTAŁEŚ ZMUTOWANY NA 1 DZIEŃ**"
-    
-
     for guild in bot.guilds:
         channel = guild.get_channel(channel_id)
         if channel:
