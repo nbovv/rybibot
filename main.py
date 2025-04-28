@@ -418,15 +418,16 @@ async def warn(interaction: discord.Interaction, members: str, powod: str, month
                 print(f"❌ Błąd przy nadawaniu timeouta: {e}")
 
             continue  # Przechodzimy do następnego użytkownika
-
-        # Jeśli nie miał WARN 3/3 — nadajemy kolejny WARN
-        # Usuwanie starego warna i sprawdzanie aktualnych WARN
 obecny_warn = 0
 for i in range(1, 4):
     rola = discord.utils.get(interaction.guild.roles, name=f"WARN {i}/3")
     if rola in member.roles:
         obecny_warn = i
         await member.remove_roles(rola)
+       
+# Jeśli nie miał WARN 3/3 — nadajemy kolejny WARN
+        # Usuwanie starego warna i sprawdzanie aktualnych WARN
+
 
 nowy_warn = obecny_warn + 1
 
