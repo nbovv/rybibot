@@ -396,23 +396,22 @@ async def warn(interaction: discord.Interaction, members: str, powod: str, month
 
         rola_warn_3 = discord.utils.get(interaction.guild.roles, name="WARN 3/3")
         if rola_warn_3 and rola_warn_3 in member.roles:
-            try:
-                await member.edit(
-                    timed_out_until=datetime.utcnow() + timedelta(days=1),
-                    reason="Przekroczenie 3/3 WARN — timeout 1 dzień"
-                )
+            rola_muted = discord.utils.get(interaction.guild.roles, name="Muted")
+            if rola_muted:
+                await member.add_roles(rola_muted)
                 await member.remove_roles(rola_warn_3)
 
                 embed = discord.Embed(
-                    title="🔴 Timeout za przekroczenie 3/3 WARN",
-                    description=f"{member.mention} otrzymał timeout na **1 dzień**",
+                    title="🔴 Nadano rolę Muted",
+                    description=f"{member.mention} otrzymał rolę **Muted** za przekroczenie 3/3 WARN.",
                     color=discord.Color.red()
                 )
                 embed.add_field(name="Powód", value=powod, inline=False)
                 await interaction.channel.send(content=member.mention, embed=embed)
-
-            except Exception as e:
-                print(f"❌ Błąd przy nadawaniu timeouta: {e}")
+            else:
+                await interaction.channel.send(
+                    embed=discord.Embed(title="Błąd", description="❌ Brak roli `Muted`.", color=discord.Color.red())
+                )
             continue
 
         obecny_warn = 0
