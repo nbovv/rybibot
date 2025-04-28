@@ -432,16 +432,24 @@ async def warn(interaction: discord.Interaction, members: str, powod: str, month
         embed.add_field(name="Użytkownik", value=member.mention, inline=False)
         embed.add_field(name="Warn", value=f"{nowy_warn}/3", inline=True)
         embed.add_field(name="Powód", value=powod, inline=False)
-        if mial_3_warn:
+        # Jeżeli po nadaniu warna użytkownik osiąga 3/3, a wcześniej miał mniej
+        if nowy_warn == 3 and obecny_warn < 3:
             try:
+                print(f"✅ Próba nadania timeouta użytkownikowi {member.display_name}")
                 if not member.timed_out_until or member.timed_out_until < datetime.utcnow():
-                    await member.edit(timed_out_until=datetime.utcnow() + timedelta(days=1), reason="Przekroczenie 3/3 WARN — przerwa na 1 dzień")
-                    embed.add_field(name="Akcja", value="🛑 Nadano timeout na **1 dzień** za przekroczenie 3/3 WARN.", inline=False)
+                    await member.edit(
+                        timed_out_until=datetime.utcnow() + timedelta(days=1),
+                        reason="Przekroczenie 3/3 WARN — przerwa na 1 dzień"
+                    )
+                    embed.add_field(
+                        name="Akcja",
+                        value="🛑 Nadano timeout na **1 dzień** za przekroczenie 3/3 WARN.",
+                        inline=False
+                    )
+                else:
+                    print(f"ℹ️ Użytkownik {member.display_name} już ma aktywny timeout.")
             except Exception as e:
-                print(f"❌ Błąd przy dawaniu timeouta: {e}")
-
-
-
+                print(f"❌ Błąd przy dawaniu timeouta użytkownikowi {member.display_name}: {e}")
 
 
         await interaction.channel.send(
