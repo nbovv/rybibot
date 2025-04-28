@@ -360,36 +360,66 @@ async def temprole_list(interaction: discord.Interaction):
 # Komenda /warn
 import typing
 
-for member_id in member_ids:
-    member = interaction.guild.get_member(member_id)
-    if not member:
-        continue
+@tree.command(name="warn", description="Nadaj ostrzeżenie użytkownikowi (lub wielu użytkownikom)")
+@app_commands.describe(members="Wzmianki użytkowników oddzielone spacją", powod="Powód", months="Liczba miesięcy (domyślnie 4)")
+async def warn(interaction: discord.Interaction, members: str, powod: str, months: int = 4):
+    if not ma_dozwolona_role(interaction.user):
+        await interaction.response.send_message(
+            embed=discord.Embed(title="Brak uprawnień", description="❌ Nie masz uprawnień.", color=discord.Color.red()),
+            ephemeral=True
+        )
+        return
+
+    member_ids = []
+    for part in members.split():
+        if part.startswith("<@") and part.endswith(">"):
+            part = part.replace("<@", "").replace("!", "").replace(">", "")
+            if part.isdigit():
+                member_ids.append(int(part))
+
+    if not member_ids:
+        await interaction.response.send_message(
+            embed=discord.Embed(title="Błąd", description="❌ Nie wykryto żadnych użytkowników we wpisanym polu.", color=discord.Color.red()),
+            ephemeral=True
+        )
+        return
 
     zadania = load_zadania(interaction.guild.id)
 
-    # Sprawdzenie czy ma już WARN 3/3
-    ma_warn_3 = discord.utils.get(interaction.guild.roles, name="WARN 3/3") in member.roles
+    for member_id in member_ids:
+        member = interaction.guild.get_member(member_id)
+        if not member:
+            try:
+                member = await interaction.guild.fetch_member(member_id)
+            except Exception:
+                continue
 
-    if ma_warn_3:
-        # Użytkownik ma już 3/3 --> DAJEMY TIMEOUT + USUWAMY ROLE
-        try:
-            await member.edit(timed_out_until=datetime.utcnow() + timedelta(days=1), reason="Przekroczenie 3/3 WARN — timeout 1 dzień")
-            rola_warn_3 = discord.utils.get(interaction.guild.roles, name="WARN 3/3")
-            if rola_warn_3:
+        # Sprawdzamy czy użytkownik ma już WARN 3/3
+        rola_warn_3 = discord.utils.get(interaction.guild.roles, name="WARN 3/3")
+        if rola_warn_3 in member.roles:
+            # Ma już WARN 3/3 — nadaj timeout i usuń rolę
+            try:
+                await member.edit(
+                    timed_out_until=datetime.utcnow() + timedelta(days=1),
+                    reason="Przekroczenie 3/3 WARN — timeout 1 dzień"
+                )
                 await member.remove_roles(rola_warn_3)
 
-            embed = discord.Embed(
-                title="🛑 Timeout",
-                description=f"Użytkownik {member.mention} otrzymał timeout na **1 dzień** za przekroczenie 3/3 WARN.",
-                color=discord.Color.red()
-            )
-            await interaction.channel.send(embed=embed)
-        
-        except Exception as e:
-            print(f"Błąd przy nadawaniu timeouta: {e}")
-    
-    else:
-        # Normalne nadanie kolejnego WARN
+                embed = discord.Embed(
+                    title="🛑 Timeout za przekroczenie 3/3 WARN",
+                    color=discord.Color.red()
+                )
+                embed.add_field(name="Użytkownik", value=member.mention, inline=False)
+                embed.add_field(name="Akcja", value="🛑 Timeout na **1 dzień**", inline=False)
+                embed.add_field(name="Powód", value=powod, inline=False)
+
+                await interaction.channel.send(content=member.mention, embed=embed)
+            except Exception as e:
+                print(f"❌ Błąd przy nadawaniu timeouta: {e}")
+
+            continue  # Przechodzimy do następnego użytkownika
+
+        # Jeśli nie miał WARN 3/3 — nadajemy kolejny WARN
         obecny_warn = 0
         for i in range(1, 4):
             rola = discord.utils.get(interaction.guild.roles, name=f"WARN {i}/3")
@@ -404,7 +434,7 @@ for member_id in member_ids:
         rola_warn = discord.utils.get(interaction.guild.roles, name=f"WARN {nowy_warn}/3")
         if not rola_warn:
             await interaction.response.send_message(
-                embed=discord.Embed(title="Błąd", description=f"Brak roli WARN {nowy_warn}/3.", color=discord.Color.red()),
+                embed=discord.Embed(title="Błąd", description=f"❌ Brak roli `WARN {nowy_warn}/3`.", color=discord.Color.red()),
                 ephemeral=True
             )
             return
@@ -420,16 +450,18 @@ for member_id in member_ids:
         })
         save_zadania(interaction.guild.id, zadania)
 
-        # Wysłanie embeda o warnie
-        embed = discord.Embed(
-            title="⚠️ Ostrzeżenie",
-            color=discord.Color.orange()
-        )
+        # Wysłanie embeda o zwykłym warnie
+        embed = discord.Embed(title="⚠️ Ostrzeżenie", color=discord.Color.orange())
         embed.add_field(name="Użytkownik", value=member.mention, inline=False)
         embed.add_field(name="Warn", value=f"{nowy_warn}/3", inline=True)
         embed.add_field(name="Powód", value=powod, inline=False)
 
         await interaction.channel.send(content=member.mention, embed=embed, allowed_mentions=discord.AllowedMentions(users=True))
+
+    await interaction.response.send_message(
+        embed=discord.Embed(title="✅ Ostrzeżenia nadane", description="Wysłano wszystkie ostrzeżenia.", color=discord.Color.green()),
+        ephemeral=True
+    )
 
 
 # Komenda /unwarn
