@@ -344,21 +344,21 @@ async def temprole_list(interaction: discord.Interaction):
 
 
 
-    embed = discord.Embed(title="📋 Zaplanowane usunięcia ról", color=discord.Color.green())
+   # embed = discord.Embed(title="📋 Zaplanowane usunięcia ról", color=discord.Color.green())
 
-    for zadanie in zadania:
-        member = interaction.guild.get_member(zadanie["user_id"])
-        role = interaction.guild.get_role(zadanie["role_id"])
-        czas_usuniecia = datetime.fromisoformat(zadanie["usun_o"]).strftime("%d.%m.%Y %H:%M:%S")
+# for zadanie in zadania:
+#     member = interaction.guild.get_member(zadanie["user_id"])
+#     role = interaction.guild.get_role(zadanie["role_id"])
+#     czas_usuniecia = datetime.fromisoformat(zadanie["usun_o"]).strftime("%d.%m.%Y %H:%M:%S")
 
-        if member and role:
-            embed.add_field(
-                name=f"{member.display_name}",
-                value=f"Rola: `{role.name}`\nUsunięcie: `{czas_usuniecia}`",
-                inline=False
-            )
+#     if member and role:
+#         embed.add_field(
+#             name=f"{member.display_name}",
+#             value=f"Rola: `{role.name}`\nUsunięcie: `{czas_usuniecia}`",
+#             inline=False
+#         )
 
-    await interaction.response.send_message(embed=embed, ephemeral=True)
+# await interaction.response.send_message(embed=embed, ephemeral=True)
 
 # Komenda /warn
 import typing
