@@ -390,7 +390,10 @@ async def warn(interaction: discord.Interaction, members: str, powod: str, month
     for member_id in member_ids:
         member = interaction.guild.get_member(member_id)
         if not member:
-            continue
+            try:
+                member = await interaction.guild.fetch_member(member_id)
+            except Exception:
+                continue
 
         # Sprawdzanie czy użytkownik miał już 3/3 warn
         mial_3_warn = False
