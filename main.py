@@ -439,7 +439,7 @@ async def warn(interaction: discord.Interaction, members: str, powod: str, month
             try:
         # Sprawdzamy czy użytkownik NIE ma obecnie aktywnego timeouta
                 if not member.timed_out_until or member.timed_out_until < datetime.utcnow():
-                    await member.timeout(duration=timedelta(days=1), reason="Przekroczenie 3/3 WARN — przerwa na 1 dzień")
+                    await member.edit(timed_out_until=datetime.utcnow() + timedelta(days=1), reason="Przekroczenie 3/3 WARN — przerwa na 1 dzień")
                     embed.add_field(name="Akcja", value="🛑 Nadano timeout na **1 dzień** za przekroczenie 3/3 WARN.", inline=False)
             except Exception as e:
                 print(f"❌ Błąd przy dawaniu timeouta: {e}")
