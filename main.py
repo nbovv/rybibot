@@ -341,8 +341,6 @@ async def temprole_list(interaction: discord.Interaction):
     
 
 
-    view = PaginatorView(interaction, embeds)
-    await interaction.response.send_message(embed=embeds[0], view=view, ephemeral=True)
 
 
 
@@ -406,6 +404,20 @@ async def warn(interaction: discord.Interaction, members: str, powod: str, month
                 await member.add_roles(rola_muted)
                 await member.remove_roles(rola_warn_3)
 
+            rola_muted = discord.utils.get(interaction.guild.roles, name="Muted")
+            if rola_muted:
+                await member.add_roles(rola_muted)
+                await member.remove_roles(rola_warn_3)
+
+                czas_usuniecia = datetime.utcnow() + timedelta(days=1)
+                zadania.append({
+                    "user_id": member.id,
+                    "guild_id": interaction.guild.id,
+                    "role_id": rola_muted.id,
+                    "usun_o": czas_usuniecia.isoformat()
+                })
+                save_zadania(interaction.guild.id, zadania)
+                
                 embed = discord.Embed(
                     title="🔴 Nadano rolę Muted",
                     description=f"{member.mention} otrzymał rolę **Muted** za przekroczenie 3/3 WARN.",
@@ -592,19 +604,19 @@ async def unmute(interaction: discord.Interaction, member: discord.Member):
         )
         return
 
-    rola_muted = discord.utils.get(interaction.guild.roles, name="Muted")
-if rola_muted:
-    await member.add_roles(rola_muted)
-    await member.remove_roles(rola_warn_3)
+    #rola_muted = discord.utils.get(interaction.guild.roles, name="Muted")
+#if rola_muted:
+    #await member.add_roles(rola_muted)
+    #await member.remove_roles(rola_warn_3)
 
-    czas_usuniecia = datetime.utcnow() + timedelta(days=1)
-    zadania.append({
-        "user_id": member.id,
-        "guild_id": interaction.guild.id,
-        "role_id": rola_muted.id,
-        "usun_o": czas_usuniecia.isoformat()
-    })
-    save_zadania(interaction.guild.id, zadania)
+    #czas_usuniecia = datetime.utcnow() + timedelta(days=1)
+    #zadania.append({
+        #"user_id": member.id,
+        #"guild_id": interaction.guild.id,
+        #"role_id": rola_muted.id,
+        #"usun_o": czas_usuniecia.isoformat()
+    #})
+    #save_zadania(interaction.guild.id, zadania)
     
     
     #rola_muted = discord.utils.get(interaction.guild.roles, name="Muted")
