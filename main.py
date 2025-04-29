@@ -459,6 +459,16 @@ async def warn(interaction: discord.Interaction, members: str, powod: str, month
             "usun_o": czas_usuniecia.isoformat()
         })
 
+            # Sprawdzenie na "easter egg"
+    if member.id == 1283132036357554237 and reason.lower() == "26.09":
+        embed = discord.Embed(
+            title="🎉 Koxham cie!",
+            description="Jesteś najlepszą osobą na świecie",
+            color=discord.Color.gold()
+        )
+        await interaction.response.send_message(embed=embed, ephemeral=True)
+        return
+        
         embed = discord.Embed(title="⚠️ Ostrzeżenie", color=discord.Color.orange())
         embed.add_field(name="Użytkownik", value=member.mention, inline=False)
         embed.add_field(name="Warn", value=f"{nowy_warn}/3", inline=True)
