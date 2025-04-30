@@ -404,7 +404,7 @@ async def warn(interaction: discord.Interaction, members: str, powod: str, month
             embed = discord.Embed(
                 title="🐗",
                 description=f"Kocham cię najbardziej na swiecie {interaction.user.mention}😚",
-                color=discord.Color.from_hex("#FF69B4")  # Ten sam odcień jako hex
+                color = discord.Color.from_rgb(255, 105, 180)  # Hot Pink
             )
             await interaction.response.send_message(embed=embed, ephemeral=True)
             return
