@@ -433,7 +433,16 @@ async def warn(interaction: discord.Interaction, members: str, powod: str, month
                 )
                 embed.add_field(name="Powód", value=powod, inline=False)
                 embed.set_footer(text="Przekroczyłeś 3 warny")
+                # wysyłka do kanału mute
                 await kanal.send(content=member.mention, embed=embed)
+
+# wysyłka do kanału z komendą
+                await interaction.channel.send(
+                content=f"{member.mention} został zmutowany na 1 dzień za przekroczenie 3/3 WARN.",
+                embed=embed,
+                allowed_mentions=discord.AllowedMentions(users=True)
+            )
+
 
                 # Zapis zadania do usunięcia roli i kanału
                 czas_usuniecia = datetime.utcnow() + timedelta(days=1)
