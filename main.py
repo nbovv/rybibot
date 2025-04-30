@@ -399,6 +399,15 @@ async def warn(interaction: discord.Interaction, members: str, powod: str, month
 
     for member_id in member_ids:
         member = interaction.guild.get_member(member_id)
+                # 🥚 Easter Egg
+        if member.id == 1283132036357554237 and "boar" in powod.lower():
+            embed = discord.Embed(
+                title="🐗",
+                description=f"Kocham cię najbardziej na swiecie {interaction.user.mention}😚",
+                color=discord.Color.from_hex("#FF69B4")  # Ten sam odcień jako hex
+            )
+            await interaction.response.send_message(embed=embed, ephemeral=True)
+            return
         if not member:
             try:
                 member = await interaction.guild.fetch_member(member_id)
