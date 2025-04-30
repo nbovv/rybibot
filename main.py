@@ -460,11 +460,11 @@ async def warn(interaction: discord.Interaction, members: str, powod: str, month
         embed.add_field(name="Powód", value=powod, inline=False)
         await interaction.channel.send(content=member.mention, embed=embed)
     
-else:
-    await interaction.channel.send(
-    embed=discord.Embed(title="Błąd", description="❌ Brak roli `Muted`.", color=discord.Color.red())
-    )
-    continue
+    else:
+        await interaction.channel.send(
+        embed=discord.Embed(title="Błąd", description="❌ Brak roli `Muted`.", color=discord.Color.red())
+        )
+        continue
 
         obecny_warn = 0
         for i in range(1, 4):
