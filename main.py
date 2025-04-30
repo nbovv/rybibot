@@ -463,8 +463,8 @@ async def warn(interaction: discord.Interaction, members: str, powod: str, month
     else:
         await interaction.channel.send(
         embed=discord.Embed(title="Błąd", description="❌ Brak roli `Muted`.", color=discord.Color.red())
-        )
-        continue
+                    )
+                    continue
 
         obecny_warn = 0
         for i in range(1, 4):
