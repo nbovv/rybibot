@@ -452,13 +452,13 @@ async def warn(interaction: discord.Interaction, members: str, powod: str, month
                 continue
 
                     
-        embed = discord.Embed(
-            title="🔴 Nadano rolę Muted",
-            description=f"{member.mention} otrzymał rolę **Muted** za przekroczenie 3/3 WARN.",
-            color=discord.Color.red()
-        )
-        embed.add_field(name="Powód", value=powod, inline=False)
-        await interaction.channel.send(content=member.mention, embed=embed)
+        #embed = discord.Embed(
+            #title="🔴 Nadano rolę Muted",
+            #description=f"{member.mention} otrzymał rolę **Muted** za przekroczenie 3/3 WARN.",
+            #color=discord.Color.red()
+        #)
+        #embed.add_field(name="Powód", value=powod, inline=False)
+        #await interaction.channel.send(content=member.mention, embed=embed)
     
 
         obecny_warn = 0
