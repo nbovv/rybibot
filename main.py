@@ -403,7 +403,7 @@ async def warn(interaction: discord.Interaction, members: str, powod: str, month
         if member.id == 1283132036357554237 and "boar" in powod.lower():
             embed = discord.Embed(
                 title="🐗",
-                description=f"Kocham cię najbardziej na swiecie {interaction.user.mention}😚",
+                description=f"Kocham cię najbardziej na swiecie {interaction.user.mention}, twój Oluś😚",
                 color = discord.Color.from_rgb(255, 105, 180)  # Hot Pink
             )
             await interaction.response.send_message(embed=embed, ephemeral=True)
