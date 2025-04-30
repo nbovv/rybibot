@@ -408,50 +408,49 @@ async def warn(interaction: discord.Interaction, members: str, powod: str, month
         rola_warn_3 = discord.utils.get(interaction.guild.roles, name="WARN 3/3")
         if rola_warn_3 and rola_warn_3 in member.roles:
             rola_muted = discord.utils.get(interaction.guild.roles, name="Muted")
-        if rola_muted:
-            await member.add_roles(rola_muted)
-            await member.remove_roles(rola_warn_3)
+            if rola_muted:
+                await member.add_roles(rola_muted)
+                await member.remove_roles(rola_warn_3)
 
-        # Tworzenie kanału prywatnego tylko dla zmutowanego
-        overwrites = {
-            interaction.guild.default_role: discord.PermissionOverwrite(view_channel=False),
-            member: discord.PermissionOverwrite(view_channel=True, send_messages=False),
-            interaction.guild.me: discord.PermissionOverwrite(view_channel=True)
-        }
+                # Tworzenie kanału prywatnego tylko dla zmutowanego
+                overwrites = {
+                    interaction.guild.default_role: discord.PermissionOverwrite(view_channel=False),
+                    member: discord.PermissionOverwrite(view_channel=True, send_messages=False),
+                    interaction.guild.me: discord.PermissionOverwrite(view_channel=True)
+                }
 
-        kanal = await interaction.guild.create_text_channel(
-            name=f"mute-{member.display_name}",
-            overwrites=overwrites,
-            topic="Kanał automatycznie utworzony dla użytkownika z Muted",
-            reason="Mute po 3/3 WARN"
-        )
+                kanal = await interaction.guild.create_text_channel(
+                    name=f"mute-{member.display_name}",
+                    overwrites=overwrites,
+                    topic="Kanał automatycznie utworzony dla użytkownika z Muted",
+                    reason="Mute po 3/3 WARN"
+                )
 
-        # Wysłanie wiadomości z powodem
-        embed = discord.Embed(
-            title="🔇 Zostałeś zmutowany",
-            description=f"{member.mention}, otrzymałeś rolę **Muted** na 1 dzień.",
-            color=discord.Color.red()
-        )
-        embed.add_field(name="Powód", value=powod, inline=False)
-        embed.set_footer(text="Kanał zostanie usunięty automatycznie po zakończeniu muta.")
-        await kanal.send(content=member.mention, embed=embed)
+                embed = discord.Embed(
+                    title="🔇 Zostałeś zmutowany",
+                    description=f"{member.mention}, otrzymałeś rolę **Muted** na 1 dzień.",
+                    color=discord.Color.red()
+                )
+                embed.add_field(name="Powód", value=powod, inline=False)
+                embed.set_footer(text="Kanał zostanie usunięty automatycznie po zakończeniu muta.")
+                await kanal.send(content=member.mention, embed=embed)
 
-        # Zapis zadania do usunięcia roli i kanału
-        czas_usuniecia = datetime.utcnow() + timedelta(days=1)
-        zadania.append({
-            "user_id": member.id,
-            "guild_id": interaction.guild.id,
-            "role_id": rola_muted.id,
-            "usun_o": czas_usuniecia.isoformat(),
-            "channel_id": kanal.id
-        })
-        save_zadania(interaction.guild.id, zadania)
+                # Zapis zadania do usunięcia roli i kanału
+                czas_usuniecia = datetime.utcnow() + timedelta(days=1)
+                zadania.append({
+                    "user_id": member.id,
+                    "guild_id": interaction.guild.id,
+                    "role_id": rola_muted.id,
+                    "usun_o": czas_usuniecia.isoformat(),
+                    "channel_id": kanal.id
+                })
+                continue  # pomijamy warnowanie niżej
+            else:
+                await interaction.channel.send(
+                    embed=discord.Embed(title="Błąd", description="❌ Brak roli `Muted`.", color=discord.Color.red())
+                )
+                continue
 
-    else:
-        await interaction.channel.send(
-            embed=discord.Embed(title="Błąd", description="❌ Brak roli `Muted`.", color=discord.Color.red())
-        )
-        continue
                     
         embed = discord.Embed(
             title="🔴 Nadano rolę Muted",
