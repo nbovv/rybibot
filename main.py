@@ -407,10 +407,10 @@ async def warn(interaction: discord.Interaction, members: str, powod: str, month
 
         rola_warn_3 = discord.utils.get(interaction.guild.roles, name="WARN 3/3")
         if rola_warn_3 and rola_warn_3 in member.roles:
-    rola_muted = discord.utils.get(interaction.guild.roles, name="Muted")
-    if rola_muted:
-        await member.add_roles(rola_muted)
-        await member.remove_roles(rola_warn_3)
+            rola_muted = discord.utils.get(interaction.guild.roles, name="Muted")
+        if rola_muted:
+            await member.add_roles(rola_muted)
+            await member.remove_roles(rola_warn_3)
 
         # Tworzenie kanału prywatnego tylko dla zmutowanego
         overwrites = {
