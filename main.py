@@ -77,7 +77,7 @@ async def sprawdz_zadania():
             role = guild.get_role(role_id)
 
             if member and role and datetime.utcnow() >= usun_o:
-    try:
+                try:
         await member.remove_roles(role)
         print(f"✅ Usunięto rolę {role.name} użytkownikowi {member.display_name}")
 
