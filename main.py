@@ -452,16 +452,7 @@ async def warn(interaction: discord.Interaction, members: str, powod: str, month
             embed=discord.Embed(title="Błąd", description="❌ Brak roli `Muted`.", color=discord.Color.red())
         )
     continue
-
-                czas_usuniecia = datetime.utcnow() + timedelta(days=1)
-                zadania.append({
-                    "user_id": member.id,
-                    "guild_id": interaction.guild.id,
-                    "role_id": rola_muted.id,
-                    "usun_o": czas_usuniecia.isoformat()
-                })
-                save_zadania(interaction.guild.id, zadania)
-                
+               
                 embed = discord.Embed(
                     title="🔴 Nadano rolę Muted",
                     description=f"{member.mention} otrzymał rolę **Muted** za przekroczenie 3/3 WARN.",
