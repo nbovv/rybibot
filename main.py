@@ -502,7 +502,7 @@ async def warn(interaction: discord.Interaction, members: str, powod: str, month
     await interaction.response.send_message(
         embed=discord.Embed(title="✅ Ostrzeżenia nadane", description="Wysłano wszystkie ostrzeżenia.", color=discord.Color.green()),
         ephemeral=True
-
+    )
 
 
 # Komenda /unwarn
