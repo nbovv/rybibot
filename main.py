@@ -502,6 +502,7 @@ async def warn(interaction: discord.Interaction, members: str, powod: str, month
     await interaction.response.send_message(
         embed=discord.Embed(title="✅ Ostrzeżenia nadane", description="Wysłano wszystkie ostrzeżenia.", color=discord.Color.green()),
         ephemeral=True
+    
     embed = discord.Embed(
             title="🔴 Nadano rolę Muted",
             description=f"{member.mention} otrzymał rolę **Muted** za przekroczenie 3/3 WARN.",
