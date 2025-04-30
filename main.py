@@ -90,11 +90,13 @@ async def sprawdz_zadania():
 
                 except Exception as e:
                     print(f"⚠️ Błąd przy usuwaniu roli lub kanału: {e}")
+                else:
+                    nowe_zadania.append(zadanie)
             else:
                 nowe_zadania.append(zadanie)
-            else:
+        else:
                 # Jeśli użytkownika lub roli nie ma, nie przenosimy zadania dalej
-                print(f"⚠️ Użytkownik lub rola nie istnieje w guild {guild.name}")
+            print(f"⚠️ Użytkownik lub rola nie istnieje w guild {guild.name}")
         
         save_zadania(guild.id, nowe_zadania)
 
