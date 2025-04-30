@@ -78,8 +78,8 @@ async def sprawdz_zadania():
 
             if member and role and datetime.utcnow() >= usun_o:
                 try:
-        await member.remove_roles(role)
-        print(f"✅ Usunięto rolę {role.name} użytkownikowi {member.display_name}")
+            await member.remove_roles(role)
+            print(f"✅ Usunięto rolę {role.name} użytkownikowi {member.display_name}")
 
         # Usunięcie kanału mute (jeśli był zapisany)
         if "channel_id" in zadanie:
