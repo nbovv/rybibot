@@ -76,13 +76,20 @@ async def sprawdz_zadania():
             member = guild.get_member(user_id)
             role = guild.get_role(role_id)
 
-            if member and role:
-                if datetime.utcnow() >= usun_o:
-                    try:
-                        await member.remove_roles(role)
-                        print(f"✅ Usunięto rolę {role.name} użytkownikowi {member.display_name}")
-                    except Exception as e:
-                        print(f"⚠️ Błąd przy usuwaniu roli: {e}")
+            if member and role and datetime.utcnow() >= usun_o:
+    try:
+        await member.remove_roles(role)
+        print(f"✅ Usunięto rolę {role.name} użytkownikowi {member.display_name}")
+
+        # Usunięcie kanału mute (jeśli był zapisany)
+        if "channel_id" in zadanie:
+            kanal = guild.get_channel(zadanie["channel_id"])
+            if kanal:
+                await kanal.delete(reason="Koniec muta — automatyczne usunięcie kanału")
+                print(f"🗑️ Usunięto kanał {kanal.name}")
+
+    except Exception as e:
+        print(f"⚠️ Błąd przy usuwaniu roli lub kanału: {e}")
                 else:
                     nowe_zadania.append(zadanie)
             else:
@@ -398,10 +405,51 @@ async def warn(interaction: discord.Interaction, members: str, powod: str, month
 
         rola_warn_3 = discord.utils.get(interaction.guild.roles, name="WARN 3/3")
         if rola_warn_3 and rola_warn_3 in member.roles:
-            rola_muted = discord.utils.get(interaction.guild.roles, name="Muted")
-            if rola_muted:
-                await member.add_roles(rola_muted)
-                await member.remove_roles(rola_warn_3)
+    rola_muted = discord.utils.get(interaction.guild.roles, name="Muted")
+    if rola_muted:
+        await member.add_roles(rola_muted)
+        await member.remove_roles(rola_warn_3)
+
+        # Tworzenie kanału prywatnego tylko dla zmutowanego
+        overwrites = {
+            interaction.guild.default_role: discord.PermissionOverwrite(view_channel=False),
+            member: discord.PermissionOverwrite(view_channel=True, send_messages=False),
+            interaction.guild.me: discord.PermissionOverwrite(view_channel=True)
+        }
+
+        kanal = await interaction.guild.create_text_channel(
+            name=f"mute-{member.display_name}",
+            overwrites=overwrites,
+            topic="Kanał automatycznie utworzony dla użytkownika z Muted",
+            reason="Mute po 3/3 WARN"
+        )
+
+        # Wysłanie wiadomości z powodem
+        embed = discord.Embed(
+            title="🔇 Zostałeś zmutowany",
+            description=f"{member.mention}, otrzymałeś rolę **Muted** na 1 dzień.",
+            color=discord.Color.red()
+        )
+        embed.add_field(name="Powód", value=powod, inline=False)
+        embed.set_footer(text="Kanał zostanie usunięty automatycznie po zakończeniu muta.")
+        await kanal.send(content=member.mention, embed=embed)
+
+        # Zapis zadania do usunięcia roli i kanału
+        czas_usuniecia = datetime.utcnow() + timedelta(days=1)
+        zadania.append({
+            "user_id": member.id,
+            "guild_id": interaction.guild.id,
+            "role_id": rola_muted.id,
+            "usun_o": czas_usuniecia.isoformat(),
+            "channel_id": kanal.id
+        })
+        save_zadania(interaction.guild.id, zadania)
+
+    else:
+        await interaction.channel.send(
+            embed=discord.Embed(title="Błąd", description="❌ Brak roli `Muted`.", color=discord.Color.red())
+        )
+    continue
 
             rola_muted = discord.utils.get(interaction.guild.roles, name="Muted")
             if rola_muted:
