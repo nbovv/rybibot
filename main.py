@@ -453,11 +453,6 @@ async def warn(interaction: discord.Interaction, members: str, powod: str, month
         )
     continue
 
-            rola_muted = discord.utils.get(interaction.guild.roles, name="Muted")
-            if rola_muted:
-                await member.add_roles(rola_muted)
-                await member.remove_roles(rola_warn_3)
-
                 czas_usuniecia = datetime.utcnow() + timedelta(days=1)
                 zadania.append({
                     "user_id": member.id,
