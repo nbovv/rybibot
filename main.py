@@ -81,16 +81,17 @@ async def sprawdz_zadania():
                     await member.remove_roles(role)
                     print(f"✅ Usunięto rolę {role.name} użytkownikowi {member.display_name}")
 
-        # Usunięcie kanału mute (jeśli był zapisany)
-        if "channel_id" in zadanie:
-            kanal = guild.get_channel(zadanie["channel_id"])
-            if kanal:
-                await kanal.delete(reason="Koniec muta – automatyczne usunięcie kanału")
-                print(f"🗑️ Usunięto kanał {kanal.name}")
-    except Exception as e:
-        print(f"⚠️ Błąd przy usuwaniu roli lub kanału: {e}")
-                else:
-                    nowe_zadania.append(zadanie)
+                    # Usunięcie kanału mute (jeśli był zapisany)
+                    if "channel_id" in zadanie:
+                        kanal = guild.get_channel(zadanie["channel_id"])
+                        if kanal:
+                            await kanal.delete(reason="Koniec muta – automatyczne usunięcie kanału")
+                            print(f"🗑️ Usunięto kanał {kanal.name}")
+
+                except Exception as e:
+                    print(f"⚠️ Błąd przy usuwaniu roli lub kanału: {e}")
+            else:
+                nowe_zadania.append(zadanie)
             else:
                 # Jeśli użytkownika lub roli nie ma, nie przenosimy zadania dalej
                 print(f"⚠️ Użytkownik lub rola nie istnieje w guild {guild.name}")
