@@ -425,12 +425,12 @@ async def warn(interaction: discord.Interaction, members: str, powod: str, month
                     if role != interaction.guild.default_role:
                         await member.remove_roles(role)
                         # Zapisujemy role (bez roli Muted i @everyone)
-                        role_ids = [role.id for role in member.roles if role != rola_muted and role.name != "@everyone"]
-                        save_user_roles(member.id, role_ids)
+                        #role_ids = [role.id for role in member.roles if role != rola_muted and role.name != "@everyone"]
+                        #save_user_roles(member.id, role_ids)
 
                         # Usuwamy tylko inne role, zostawiamy Muted
-                        await member.remove_roles(*[discord.utils.get(member.guild.roles, id=rid) for rid in role_ids])
-                        await member.add_roles(rola_muted)
+                        #await member.remove_roles(*[discord.utils.get(member.guild.roles, id=rid) for rid in role_ids])
+                        #await member.add_roles(rola_muted)
 
                 # NADANIE MUTED
                         await member.add_roles(rola_muted)
@@ -553,11 +553,11 @@ async def unwarn(interaction: discord.Interaction, member: discord.Member):
         if rola in member.roles:
             await member.remove_roles(rola)
             # PRZYWRÓĆ POPRZEDNIE ROLE JEŚLI SĄ ZAPISANE
-            role_ids = previous_roles.get(member.id, [])
-            roles_to_add = [guild.get_role(role_id) for role_id in role_ids if guild.get_role(role_id)]
-            if roles_to_add:
-                await member.add_roles(*roles_to_add)
-                print(f"🎭 Przywrócono role użytkownikowi {member.display_name}")
+            #role_ids = previous_roles.get(member.id, [])
+            #roles_to_add = [guild.get_role(role_id) for role_id in role_ids if guild.get_role(role_id)]
+            #if roles_to_add:
+                #await member.add_roles(*roles_to_add)
+                #print(f"🎭 Przywrócono role użytkownikowi {member.display_name}")
 
             znaleziono = True
 
