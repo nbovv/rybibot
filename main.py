@@ -13,6 +13,7 @@ load_dotenv()
 TOKEN = os.getenv("TOKEN")
 
 intents = discord.Intents.all()
+previous_roles = {}
 
 ostatnia_wiadomosc: Message = None
 
@@ -418,8 +419,16 @@ async def warn(interaction: discord.Interaction, members: str, powod: str, month
         if rola_warn_3 and rola_warn_3 in member.roles:
             rola_muted = discord.utils.get(interaction.guild.roles, name="Muted")
             if rola_muted:
-                await member.add_roles(rola_muted)
-                await member.remove_roles(rola_warn_3)
+                # ZAPISZ ROLE I USUN WSZYSTKO OPRÓCZ @everyone
+                previous_roles[member.id] = [role.id for role in member.roles if role != interaction.guild.default_role]
+                for role in member.roles:
+                    if role != interaction.guild.default_role:
+                        await member.remove_roles(role)
+
+                # NADANIE MUTED
+                        await member.add_roles(rola_muted)
+                        await member.add_roles(rola_muted)
+                        await member.remove_roles(rola_warn_3)
 
                 # Tworzenie kanału prywatnego tylko dla zmutowanego
                 overwrites = {
@@ -536,6 +545,13 @@ async def unwarn(interaction: discord.Interaction, member: discord.Member):
         rola = discord.utils.get(interaction.guild.roles, name=f"WARN {i}/3")
         if rola in member.roles:
             await member.remove_roles(rola)
+            # PRZYWRÓĆ POPRZEDNIE ROLE JEŚLI SĄ ZAPISANE
+            role_ids = previous_roles.get(member.id, [])
+            roles_to_add = [guild.get_role(role_id) for role_id in role_ids if guild.get_role(role_id)]
+            if roles_to_add:
+                await member.add_roles(*roles_to_add)
+                print(f"🎭 Przywrócono role użytkownikowi {member.display_name}")
+
             znaleziono = True
 
     if znaleziono:
