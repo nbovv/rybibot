@@ -429,13 +429,13 @@ async def warn(interaction: discord.Interaction, members: str, powod: str, month
                         save_user_roles(member.id, role_ids)
 
                         # Usuwamy tylko inne role, zostawiamy Muted
-                        await member.remove_roles(*[discord.utils.get(member.guild.roles, id=rid) for rid in role_ids])
-                        await member.add_roles(rola_muted)
+                        #await member.remove_roles(*[discord.utils.get(member.guild.roles, id=rid) for rid in role_ids])
+                        #await member.add_roles(rola_muted)
 
                 # NADANIE MUTED
-                        await member.add_roles(rola_muted)
-                        await member.add_roles(rola_muted)
-                        await member.remove_roles(rola_warn_3)
+                        #await member.add_roles(rola_muted)
+                        #await member.add_roles(rola_muted)
+                        #await member.remove_roles(rola_warn_3)
 
                 # Tworzenie kanału prywatnego tylko dla zmutowanego
                 overwrites = {
