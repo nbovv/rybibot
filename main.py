@@ -425,7 +425,7 @@ async def warn(interaction: discord.Interaction, members: str, powod: str, month
                     if role != interaction.guild.default_role:
                         await member.remove_roles(role)
                         # Zapisujemy role (bez roli Muted i @everyone)
-                        role_ids = [role.id for role in member.roles if role != rola_muted and role.name != "@Muted"]
+                        role_ids = [role.id for role in member.roles if role != rola_muted and role.name != "@everyone"]
                         save_user_roles(member.id, role_ids)
 
                         # Usuwamy tylko inne role, zostawiamy Muted
