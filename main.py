@@ -8,29 +8,29 @@ from dotenv import load_dotenv
 import logging
 logging.basicConfig(level=logging.INFO)
 
-def save_user_roles(user_id, role_ids):
-    """Zapisz role użytkownika do pliku."""
-    if not os.path.exists("roles.json"):
-        with open("roles.json", "w") as f:
-            json.dump({}, f)
+#def save_user_roles(user_id, role_ids):
+    #"""Zapisz role użytkownika do pliku."""
+    #if not os.path.exists("roles.json"):
+        #with open("roles.json", "w") as f:
+            #json.dump({}, f)
 
-    with open("roles.json", "r") as f:
-        data = json.load(f)
+    #with open("roles.json", "r") as f:
+        #data = json.load(f)
 
-    data[str(user_id)] = role_ids
+    #data[str(user_id)] = role_ids
 
-    with open("roles.json", "w") as f:
+    #with open("roles.json", "w") as f:
         json.dump(data, f)
 
-def load_user_roles(user_id):
-    """Wczytaj zapisane role użytkownika."""
-    if not os.path.exists("roles.json"):
-        return []
+#def load_user_roles(user_id):
+    #"""Wczytaj zapisane role użytkownika."""
+    #if not os.path.exists("roles.json"):
+        #return []
 
-    with open("roles.json", "r") as f:
-        data = json.load(f)
+    #with open("roles.json", "r") as f:
+        #data = json.load(f)
 
-    return data.get(str(user_id), [])
+    #return data.get(str(user_id), [])
 
 
 load_dotenv()
@@ -444,53 +444,53 @@ async def warn(interaction: discord.Interaction, members: str, powod: str, month
             rola_muted = discord.utils.get(interaction.guild.roles, name="Muted")
             if rola_muted:
                 # ZAPISZ ROLE I USUN WSZYSTKO OPRÓCZ @everyone
-                previous_roles[member.id] = [role.id for role in member.roles if role != interaction.guild.default_role]
-                for role in member.roles:
-                    if role != interaction.guild.default_role:
-                        await member.remove_roles(role)
+                #previous_roles[member.id] = [role.id for role in member.roles if role != interaction.guild.default_role]
+                #for role in member.roles:
+                    #if role != interaction.guild.default_role:
+                        #await member.remove_roles(role)
                         # Przywróć poprzednie role
-                        role_ids = load_user_roles(member.id)
-                        roles_to_restore = [discord.utils.get(guild.roles, id=rid) for rid in role_ids if discord.utils.get(guild.roles, id=rid)]
-                        if roles_to_restore:
-                            await member.add_roles(*roles_to_restore)
-                            print(f"✅ Przywrócono role użytkownikowi {member.display_name}")
+                        #role_ids = load_user_roles(member.id)
+                        #roles_to_restore = [discord.utils.get(guild.roles, id=rid) for rid in role_ids if discord.utils.get(guild.roles, id=rid)]
+                        #if roles_to_restore:
+                            #await member.add_roles(*roles_to_restore)
+                            #print(f"✅ Przywrócono role użytkownikowi {member.display_name}")
 
                         # Zapisujemy role (bez roli Muted i @everyone)
-                        role_ids = [role.id for role in member.roles if role != rola_muted and role.name != "@everyone"]
-                        save_user_roles(member.id, role_ids)
+                        #role_ids = [role.id for role in member.roles if role != rola_muted and role.name != "@everyone"]
+                        #save_user_roles(member.id, role_ids)
 
-                        if user_id in warns and warns[user_id] >= 3:
-                            guild = interaction.guild
-                            member = await guild.fetch_member(user_id)
-                            mute_role = discord.utils.get(guild.roles, name="Muted")
+                        #if user_id in warns and warns[user_id] >= 3:
+                            #guild = interaction.guild
+                            #member = await guild.fetch_member(user_id)
+                            #mute_role = discord.utils.get(guild.roles, name="Muted")
 
-                            if not mute_role:
-                                mute_role = await guild.create_role(name="Muted", reason="Tworzenie roli do mutowania")
+                            #if not mute_role:
+                                #mute_role = await guild.create_role(name="Muted", reason="Tworzenie roli do mutowania")
 
-                            old_roles = [role.id for role in member.roles if role != guild.default_role]
+                            #old_roles = [role.id for role in member.roles if role != guild.default_role]
 
                             # 🔐 Zapis na trwałym dysku Rendera
-                            mute_file = "/var/data/mutes.json"
-                            try:
-                                with open(mute_file, "r") as f:
-                                    mutes = json.load(f)
-                            except (FileNotFoundError, json.JSONDecodeError):
-                                mutes = []
+                            #mute_file = "/var/data/mutes.json"
+                            #try:
+                                #with open(mute_file, "r") as f:
+                                    #mutes = json.load(f)
+                            #except (FileNotFoundError, json.JSONDecodeError):
+                                #mutes = []
 
-                            mute_entry = {
-                                "user_id": user_id,
-                                "guild_id": guild.id,
-                                "roles": old_roles,
-                                "muted_until": (datetime.datetime.utcnow() + datetime.timedelta(days=1)).timestamp()
-                            }
+                            #mute_entry = {
+                                #"user_id": user_id,
+                                #"guild_id": guild.id,
+                                #"roles": old_roles,
+                                #"muted_until": (datetime.datetime.utcnow() + datetime.timedelta(days=1)).timestamp()
+                            #}
 
-                            mutes.append(mute_entry)
+                            #mutes.append(mute_entry)
 
-                            with open(mute_file, "w") as f:
-                                json.dump(mutes, f, indent=4)
+                            #with open(mute_file, "w") as f:
+                                #json.dump(mutes, f, indent=4)
 
-                            await member.edit(roles=[mute_role])
-                            await interaction.followup.send(f"{member.mention} otrzymał mute na 1 dzień za przekroczenie 3 ostrzeżeń.")
+                            #await member.edit(roles=[mute_role])
+                            #await interaction.followup.send(f"{member.mention} otrzymał mute na 1 dzień za przekroczenie 3 ostrzeżeń.")
 
                 # Tworzenie kanału prywatnego tylko dla zmutowanego
                 overwrites = {
