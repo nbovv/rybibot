@@ -20,7 +20,7 @@ logging.basicConfig(level=logging.INFO)
     #data[str(user_id)] = role_ids
 
     #with open("roles.json", "w") as f:
-        json.dump(data, f)
+        #json.dump(data, f)
 
 #def load_user_roles(user_id):
     #"""Wczytaj zapisane role użytkownika."""
