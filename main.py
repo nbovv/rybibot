@@ -8,6 +8,30 @@ from dotenv import load_dotenv
 import logging
 logging.basicConfig(level=logging.INFO)
 
+def save_user_roles(user_id, role_ids):
+    """Zapisz role użytkownika do pliku."""
+    if not os.path.exists("roles.json"):
+        with open("roles.json", "w") as f:
+            json.dump({}, f)
+
+    with open("roles.json", "r") as f:
+        data = json.load(f)
+
+    data[str(user_id)] = role_ids
+
+    with open("roles.json", "w") as f:
+        json.dump(data, f)
+
+def load_user_roles(user_id):
+    """Wczytaj zapisane role użytkownika."""
+    if not os.path.exists("roles.json"):
+        return []
+
+    with open("roles.json", "r") as f:
+        data = json.load(f)
+
+    return data.get(str(user_id), [])
+
 
 load_dotenv()
 TOKEN = os.getenv("TOKEN")
@@ -424,6 +448,13 @@ async def warn(interaction: discord.Interaction, members: str, powod: str, month
                 for role in member.roles:
                     if role != interaction.guild.default_role:
                         await member.remove_roles(role)
+                        # Przywróć poprzednie role
+                        role_ids = load_user_roles(member.id)
+                        roles_to_restore = [discord.utils.get(guild.roles, id=rid) for rid in role_ids if discord.utils.get(guild.roles, id=rid)]
+                        if roles_to_restore:
+                            await member.add_roles(*roles_to_restore)
+                            print(f"✅ Przywrócono role użytkownikowi {member.display_name}")
+
                         # Zapisujemy role (bez roli Muted i @everyone)
                         role_ids = [role.id for role in member.roles if role != rola_muted and role.name != "@everyone"]
                         save_user_roles(member.id, role_ids)
