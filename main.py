@@ -428,14 +428,38 @@ async def warn(interaction: discord.Interaction, members: str, powod: str, month
                         role_ids = [role.id for role in member.roles if role != rola_muted and role.name != "@everyone"]
                         save_user_roles(member.id, role_ids)
 
-                        # Usuwamy tylko inne role, zostawiamy Muted
-                        #await member.remove_roles(*[discord.utils.get(member.guild.roles, id=rid) for rid in role_ids])
-                        #await member.add_roles(rola_muted)
+                        if user_id in warns and warns[user_id] >= 3:
+                            guild = interaction.guild
+                            member = await guild.fetch_member(user_id)
+                            mute_role = discord.utils.get(guild.roles, name="Muted")
 
-                # NADANIE MUTED
-                        #await member.add_roles(rola_muted)
-                        #await member.add_roles(rola_muted)
-                        #await member.remove_roles(rola_warn_3)
+                            if not mute_role:
+                                mute_role = await guild.create_role(name="Muted", reason="Tworzenie roli do mutowania")
+
+                            old_roles = [role.id for role in member.roles if role != guild.default_role]
+
+                            # 🔐 Zapis na trwałym dysku Rendera
+                            mute_file = "/var/data/mutes.json"
+                            try:
+                                with open(mute_file, "r") as f:
+                                    mutes = json.load(f)
+                            except (FileNotFoundError, json.JSONDecodeError):
+                                mutes = []
+
+                            mute_entry = {
+                                "user_id": user_id,
+                                "guild_id": guild.id,
+                                "roles": old_roles,
+                                "muted_until": (datetime.datetime.utcnow() + datetime.timedelta(days=1)).timestamp()
+                            }
+
+                            mutes.append(mute_entry)
+
+                            with open(mute_file, "w") as f:
+                                json.dump(mutes, f, indent=4)
+
+                            await member.edit(roles=[mute_role])
+                            await interaction.followup.send(f"{member.mention} otrzymał mute na 1 dzień za przekroczenie 3 ostrzeżeń.")
 
                 # Tworzenie kanału prywatnego tylko dla zmutowanego
                 overwrites = {
