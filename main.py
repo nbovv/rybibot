@@ -585,10 +585,17 @@ async def warn(interaction: discord.Interaction, members: str, powod: str, month
         embed.add_field(name="Użytkownik", value=member.mention, inline=False)
         embed.add_field(name="Warn", value=f"{nowy_warn}/3", inline=True)
         embed.add_field(name="Powód", value=powod, inline=False)
-        log_embed.timestamp = datetime.utcnow()
-        await log_channel.send(embed=log_embed)
         await interaction.channel.send(content=member.mention, embed=embed)
 
+        log_channel = interaction.guild.get_channel(LOG_CHANNEL_ID)
+        if log_channel:
+            log_embed = discord.Embed(title="⚠️ Nowy WARN", color=discord.Color.orange())
+            log_embed.add_field(name="Użytkownik", value=member.mention, inline=True)
+            log_embed.add_field(name="Warn", value=f"{nowy_warn}/3", inline=True)
+            log_embed.add_field(name="Powód", value=powod, inline=False)
+            log_embed.add_field(name="Moderator", value=interaction.user.mention, inline=True)
+            log_embed.timestamp = datetime.utcnow()
+            await log_channel.send(embed=log_embed)
     save_zadania(interaction.guild.id, zadania)
 
     await interaction.response.send_message(
