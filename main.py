@@ -35,6 +35,7 @@ logging.basicConfig(level=logging.INFO)
 
 load_dotenv()
 TOKEN = os.getenv("TOKEN")
+LOG_CHANNEL_ID = 1376659262389878925  # <- Zamień na ID twojego kanału logów
 
 intents = discord.Intents.all()
 previous_roles = {}
@@ -584,7 +585,8 @@ async def warn(interaction: discord.Interaction, members: str, powod: str, month
         embed.add_field(name="Użytkownik", value=member.mention, inline=False)
         embed.add_field(name="Warn", value=f"{nowy_warn}/3", inline=True)
         embed.add_field(name="Powód", value=powod, inline=False)
-        embed.add_field(name="Nadany przez", value=interaction.user.mention, inline=False)
+        log_embed.timestamp = datetime.utcnow()
+        await log_channel.send(embed=log_embed)
         await interaction.channel.send(content=member.mention, embed=embed)
 
     save_zadania(interaction.guild.id, zadania)
