@@ -516,6 +516,15 @@ async def warn(interaction: discord.Interaction, members: str, powod: str, month
                 embed.set_footer(text="Przekroczyłeś 3 warny")
                 # wysyłka do kanału mute
                 await kanal.send(content=member.mention, embed=embed)
+                log_channel = interaction.guild.get_channel(LOG_CHANNEL_ID)
+                if log_channel:
+                    log_embed = discord.Embed(title="🔇 Mute za 4/3 WARN", color=discord.Color.red())
+                    log_embed.add_field(name="Użytkownik", value=member.mention, inline=True)
+                    log_embed.add_field(name="Moderator", value=interaction.user.mention, inline=True)
+                    log_embed.add_field(name="Powód", value=powod, inline=False)
+                    log_embed.add_field(name="Czas trwania", value="1 dzień", inline=True)
+                    log_embed.timestamp = datetime.utcnow()
+                    await log_channel.send(embed=log_embed)
 
 # wysyłka do kanału z komendą
                 await interaction.channel.send(
