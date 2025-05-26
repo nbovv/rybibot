@@ -584,6 +584,7 @@ async def warn(interaction: discord.Interaction, members: str, powod: str, month
         embed.add_field(name="Użytkownik", value=member.mention, inline=False)
         embed.add_field(name="Warn", value=f"{nowy_warn}/3", inline=True)
         embed.add_field(name="Powód", value=powod, inline=False)
+        embed.add_field(name="Nadany przez", value=interaction.user.mention, inline=False)
         await interaction.channel.send(content=member.mention, embed=embed)
 
     save_zadania(interaction.guild.id, zadania)
