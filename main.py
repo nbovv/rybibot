@@ -442,8 +442,41 @@ async def warn(interaction: discord.Interaction, members: str, powod: str, month
 
         rola_warn_3 = discord.utils.get(interaction.guild.roles, name="WARN 3/3")
         if rola_warn_3 and rola_warn_3 in member.roles:
-            rola_muted = discord.utils.get(interaction.guild.roles, name="Muted")
-            if rola_muted:
+            await member.remove_roles(rola_warn_3)
+
+            try:
+                czas_timeoutu = timedelta(days=1)
+                await member.timeout(czas_timeoutu, reason=f"3/3 WARN — {powod}")
+
+                embed = discord.Embed(
+                    title="⏳ Timeout nadany",
+                    description=f"{member.mention} otrzymał timeout na {czas_timeoutu.days} dzień.",
+                    color=discord.Color.red()
+                )
+                embed.add_field(name="Powód", value=powod, inline=False)
+                embed.set_footer(text="Ostrzeżenia: 3/3 — Timeout nadany automatycznie")
+
+                await interaction.channel.send(content=member.mention, embed=embed)
+
+                log_channel = interaction.guild.get_channel(LOG_CHANNEL_ID)
+                if log_channel:
+                    log_embed = discord.Embed(title="📛 Timeout po 3/3 WARN", color=discord.Color.dark_red())
+                    log_embed.add_field(name="Użytkownik", value=member.mention, inline=True)
+                    log_embed.add_field(name="Czas", value="1 dzień", inline=True)
+                    log_embed.add_field(name="Powód", value=powod, inline=False)
+                    log_embed.add_field(name="Moderator", value=interaction.user.mention, inline=True)
+                    log_embed.timestamp = datetime.utcnow()
+                    await log_channel.send(embed=log_embed)
+
+            except Exception as e:
+                await interaction.channel.send(
+                    embed=discord.Embed(
+                        title="❌ Błąd timeoutu",
+                        description=f"Nie udało się nadać timeoutu {member.mention}: {e}",
+                        color=discord.Color.red()
+                    )
+                )
+            continue  # pomijamy dalsze ostrzeżenia dla tej osoby
                 # ZAPISZ ROLE I USUN WSZYSTKO OPRÓCZ @everyone
                 #previous_roles[member.id] = [role.id for role in member.roles if role != interaction.guild.default_role]
                 #for role in member.roles:
@@ -493,62 +526,6 @@ async def warn(interaction: discord.Interaction, members: str, powod: str, month
                             #await member.edit(roles=[mute_role])
                             #await interaction.followup.send(f"{member.mention} otrzymał mute na 1 dzień za przekroczenie 3 ostrzeżeń.")
 
-                # Tworzenie kanału prywatnego tylko dla zmutowanego
-                overwrites = {
-                    interaction.guild.default_role: discord.PermissionOverwrite(view_channel=False),
-                    member: discord.PermissionOverwrite(view_channel=True, send_messages=False),
-                    interaction.guild.me: discord.PermissionOverwrite(view_channel=True)
-                }
-
-                kanal = await interaction.guild.create_text_channel(
-                    name=f"mute-{member.display_name}",
-                    overwrites=overwrites,
-                    topic="Kanał automatycznie utworzony dla użytkownika z Muted",
-                    reason="Mute po 3/3 WARN"
-                )
-
-                embed = discord.Embed(
-                    title="🔇 Zostałeś zmutowany",
-                    description=f"{member.mention}, otrzymałeś rolę **Muted** na 1 dzień.",
-                    color=discord.Color.red()
-                )
-                embed.add_field(name="Powód", value=powod, inline=False)
-                embed.set_footer(text="Przekroczyłeś 3 warny")
-                # wysyłka do kanału mute
-                await kanal.send(content=member.mention, embed=embed)
-                log_channel = interaction.guild.get_channel(LOG_CHANNEL_ID)
-                if log_channel:
-                    log_embed = discord.Embed(title="🔇 Mute za 4/3 WARN", color=discord.Color.red())
-                    log_embed.add_field(name="Użytkownik", value=member.mention, inline=True)
-                    log_embed.add_field(name="Moderator", value=interaction.user.mention, inline=True)
-                    log_embed.add_field(name="Powód", value=powod, inline=False)
-                    log_embed.add_field(name="Czas trwania", value="1 dzień", inline=True)
-                    log_embed.timestamp = datetime.utcnow()
-                    await log_channel.send(embed=log_embed)
-
-# wysyłka do kanału z komendą
-                await interaction.channel.send(
-                content=f"{member.mention} został zmutowany na 1 dzień za przekroczenie 3/3 WARN.",
-                embed=embed,
-                allowed_mentions=discord.AllowedMentions(users=True)
-            )
-
-
-                # Zapis zadania do usunięcia roli i kanału
-                czas_usuniecia = datetime.utcnow() + timedelta(days=1)
-                zadania.append({
-                    "user_id": member.id,
-                    "guild_id": interaction.guild.id,
-                    "role_id": rola_muted.id,
-                    "usun_o": czas_usuniecia.isoformat(),
-                    "channel_id": kanal.id
-                })
-                continue  # pomijamy warnowanie niżej
-            else:
-                await interaction.channel.send(
-                    embed=discord.Embed(title="Błąd", description="❌ Brak roli `Muted`.", color=discord.Color.red())
-                )
-                continue
 
                     
         #embed = discord.Embed(
