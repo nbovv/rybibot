@@ -454,7 +454,7 @@ async def warn(interaction: discord.Interaction, members: str, powod: str, month
                     color=discord.Color.red()
                 )
                 embed.add_field(name="Powód", value=powod, inline=False)
-                embed.set_footer(text="Ostrzeżenia: 3/3 — Timeout nadany automatycznie")
+                embed.set_footer(text="Ostrzeżenia: 4/3 — Timeout nadany automatycznie")
 
                 await interaction.channel.send(content=member.mention, embed=embed)
 
