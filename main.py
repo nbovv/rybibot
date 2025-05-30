@@ -61,7 +61,6 @@ previous_roles = {}
 
 ostatnia_wiadomosc: Message = None
 
-bot = commands.Bot(command_prefix="!", intents=intents)
 tree = bot.tree
 
 # Funkcje pomocnicze
