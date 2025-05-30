@@ -15,7 +15,7 @@ bot = commands.Bot(command_prefix="!", intents=intents)
 async def on_ready():
     print(f"✅ Bot zalogowany jako {bot.user}")
     for filename in os.listdir("./cogs"):
-        if filename.endswith(".py"):
+        if filename("dealer_game.py"):
             await bot.load_extension(f"cogs.{filename[:-3]}")
 
 #def save_user_roles(user_id, role_ids):
