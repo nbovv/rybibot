@@ -834,6 +834,8 @@ def wczytaj_dane():
         dane["salony"] = {}
     if "gracze" not in dane:
         dane["gracze"] = {}
+    if "wartosc" not in dane["salony"][user_id]:
+        dane["salony"][user_id]["wartosc"] = 0
 
     return dane
 
