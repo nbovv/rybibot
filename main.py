@@ -808,6 +808,11 @@ async def stworz(interaction: discord.Interaction):
         "pieniadze": 100000
     }
 
+    dane["salony"][user_id] = {
+    "nazwa": nazwa_salonu,
+    "auta": [],
+    "wartosc": 0
+    }
     zapisz_dane(dane)
 
     embed = discord.Embed(
