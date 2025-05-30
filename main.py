@@ -13,15 +13,18 @@ bot = commands.Bot(command_prefix="!", intents=intents)
 
 @bot.event
 async def on_ready():
-    await bot.tree.sync()
     print(f"✅ Zalogowano jako {bot.user}")
+    try:
+        synced = await bot.tree.sync()
+        print(f"🌐 Slash komendy zsynchronizowane ({len(synced)}).")
+    except Exception as e:
+        print(f"❌ Błąd synchronizacji: {e}")
 
-# Ładowanie cogów
-for filename in os.listdir("./cogs"):
-    if filename.endswith(".py"):
-        await bot.load_extension(f"cogs.{filename[:-3]}")
-        print(f"🔌 Załadowano: {filename}")
-
+async def load_cogs():
+    for filename in os.listdir("./cogs"):
+        if filename.endswith(".py"):
+            await bot.load_extension(f"cogs.{filename[:-3]}")
+            print(f"🔌 Załadowano cog: {filename}")
 #def save_user_roles(user_id, role_ids):
     #"""Zapisz role użytkownika do pliku."""
     #if not os.path.exists("roles.json"):
