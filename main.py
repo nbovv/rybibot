@@ -9,7 +9,7 @@ import logging
 import asyncio
 logging.basicConfig(level=logging.INFO)
 
-DATA_FILE = "/var/data/"
+DATA_FILE = "/var/data/dealer_data.json"
 
 #def save_user_roles(user_id, role_ids):
     #"""Zapisz role użytkownika do pliku."""
