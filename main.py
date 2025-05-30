@@ -825,6 +825,56 @@ def zapisz_dane(dane):
     with open(DATA_FILE, "w", encoding="utf-8") as f:
         json.dump(dane, f, indent=4)
 
+from discord import ui
+
+class PotwierdzenieUsuniecia(ui.View):
+    def __init__(self, interaction, user_id, dane):
+        super().__init__(timeout=30)
+        self.interaction = interaction
+        self.user_id = user_id
+        self.dane = dane
+        self.odpowiedziano = False
+
+    @ui.button(label="🗑️ Tak, usuń", style=discord.ButtonStyle.danger)
+    async def potwierdz(self, interaction: discord.Interaction, button: ui.Button):
+        if interaction.user.id != int(self.user_id):
+            await interaction.response.send_message("❌ To nie jest Twoja decyzja!", ephemeral=True)
+            return
+
+        self.dane["salony"].pop(self.user_id, None)
+        self.dane["gracze"].pop(self.user_id, None)
+        zapisz_dane(self.dane)
+
+        await interaction.response.edit_message(content="✅ Twój salon został usunięty.", view=None)
+        self.odpowiedziano = True
+        self.stop()
+
+    @ui.button(label="❌ Anuluj", style=discord.ButtonStyle.secondary)
+    async def anuluj(self, interaction: discord.Interaction, button: ui.Button):
+        if interaction.user.id != int(self.user_id):
+            await interaction.response.send_message("❌ To nie jest Twoja decyzja!", ephemeral=True)
+            return
+
+        await interaction.response.edit_message(content="❎ Anulowano usuwanie salonu.", view=None)
+        self.odpowiedziano = True
+        self.stop()
+
+@bot.tree.command(name="usun_salon", description="Usuń swój salon (bezpowrotnie)")
+async def usun_salon(interaction: discord.Interaction):
+    user_id = str(interaction.user.id)
+    dane = wczytaj_dane()
+
+    if user_id not in dane["salony"]:
+        await interaction.response.send_message("❌ Nie masz jeszcze salonu.", ephemeral=True)
+        return
+
+    view = PotwierdzenieUsuniecia(interaction, user_id, dane)
+    await interaction.response.send_message(
+        "⚠️ Na pewno chcesz usunąć swój salon i konto? Tej operacji nie można cofnąć!",
+        view=view, ephemeral=True
+    )
+
+
 @bot.event
 async def on_message(message):
         if message.author.bot:
