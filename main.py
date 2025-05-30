@@ -777,9 +777,24 @@ async def unmute(interaction: discord.Interaction, member: discord.Member):
     await interaction.response.send_message(embed=embed)
 
 # Komenda slash
-@bot.tree.command(name="stworz", description="Stwórz salon samochodowy")
+@bot.tree.command(name="stworz", description="Stwórz swój salon samochodowy")
 async def stworz(interaction: discord.Interaction):
-    await interaction.response.send_message("Salon został stworzony!")
+    user_id = str(interaction.user.id)
+    dane = wczytaj_dane()
+
+    if user_id in dane["salony"]:
+        await interaction.response.send_message("Masz już swój salon!")
+        return
+
+    # Tworzymy nowy salon z 3 miejscami na auta i pustą listą aut
+    dane["salony"][user_id] = {
+        "miejsca": 3,
+        "auta": []
+    }
+
+    zapisz_dane(dane)
+    await interaction.response.send_message("🎉 Twój salon został stworzony! Masz 3 miejsca na auta.")
+
 
 
 @bot.event
