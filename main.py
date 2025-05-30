@@ -824,10 +824,12 @@ async def stworz(interaction: discord.Interaction):
 
 
 def wczytaj_dane():
-    if not os.path.isfile(DATA_FILE):
-        return {"salony": {}, "gracze": {}}
-    with open(DATA_FILE, "r", encoding="utf-8") as f:
-        dane = json.load(f)
+    try:
+        with open("dane.json", "r", encoding="utf-8") as f:
+            return json.load(f)
+    except FileNotFoundError:
+        return {"salony": {}}
+
 
     # Upewnij się, że oba klucze istnieją
     if "salony" not in dane:
