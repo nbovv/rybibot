@@ -796,7 +796,15 @@ async def stworz(interaction: discord.Interaction):
     zapisz_dane(dane)
     await interaction.response.send_message("🎉 Twój salon został stworzony! Masz 3 miejsca na auta.")
 
+def wczytaj_dane():
+    if not os.path.isfile(DATA_FILE):
+        return {"salony": {}}
+    with open(DATA_FILE, "r", encoding="utf-8") as f:
+        return json.load(f)
 
+def zapisz_dane(dane):
+    with open(DATA_FILE, "w", encoding="utf-8") as f:
+        json.dump(dane, f, indent=4)
 
 @bot.event
 async def on_message(message):
@@ -807,17 +815,7 @@ async def on_message(message):
 
         await bot.process_commands(message)
 
-DATA_FILE = "dealer_data.json"
 
-def wczytaj_dane():
-    if not os.path.isfile(DATA_FILE):
-        return {"salony": {}}
-    with open(DATA_FILE, "r", encoding="utf-8") as f:
-        return json.load(f)
-
-def zapisz_dane(dane):
-    with open(DATA_FILE, "w", encoding="utf-8") as f:
-        json.dump(dane, f, indent=4)
     
 # keep_alive()
 
