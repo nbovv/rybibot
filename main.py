@@ -797,6 +797,14 @@ async def stworz(interaction: discord.Interaction):
         "auta": []
     }
 
+    dane["salony"][user_id] = {
+        "miejsca": 3,
+        "auta": []
+    }
+    dane["gracze"][user_id] = {
+        "pieniadze": 100000
+    }
+
     zapisz_dane(dane)
 
     embed = discord.Embed(
