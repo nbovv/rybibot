@@ -8,6 +8,16 @@ from dotenv import load_dotenv
 import logging
 logging.basicConfig(level=logging.INFO)
 
+intents = discord.Intents.all()
+bot = commands.Bot(command_prefix="!", intents=intents)
+
+@bot.event
+async def on_ready():
+    print(f"✅ Bot zalogowany jako {bot.user}")
+    for filename in os.listdir("./cogs"):
+        if filename.endswith(".py"):
+            await bot.load_extension(f"cogs.{filename[:-3]}")
+
 #def save_user_roles(user_id, role_ids):
     #"""Zapisz role użytkownika do pliku."""
     #if not os.path.exists("roles.json"):
