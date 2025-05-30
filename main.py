@@ -812,7 +812,7 @@ async def stworz(interaction: discord.Interaction):
 
     embed = discord.Embed(
         title="🚗 Salon utworzony!",
-        description="🎉 Twój salon został pomyślnie stworzony!\nMasz teraz **3 miejsca** na auta.",
+        description="🎉 Twój salon został pomyślnie stworzony!\nMasz teraz **3 miejsca** na auta i 100k na start.",
         color=discord.Color.green()
     )
     await interaction.response.send_message(embed=embed)
