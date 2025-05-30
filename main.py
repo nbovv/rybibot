@@ -13,7 +13,6 @@ bot = commands.Bot(command_prefix="!", intents=intents)
 
 @bot.event
 async def on_ready():
-    print(f"✅ Bot zalogowany jako {bot.user}")
     for filename in os.listdir("./cogs"):
         if filename.endswith(".py"):
             await bot.load_extension("dealer_game")  # jeśli dealer_game.py jest w tym samym katalogu co mainly.py
@@ -144,10 +143,11 @@ async def on_ready():
     sprawdz_zadania.start()
     heartbeat.start()
     wysylaj_wiadomosc.start()
+    await bot.load_extension("cogs.dealer_game")
     await tree.sync()
     print("✅ Slash komendy zsynchronizowane!")
 
-@tasks.loop(minutes=5)
+@tasks.loop(minutes=)
 async def heartbeat():
     print(f"💓 Ping: {datetime.utcnow()}")
 
