@@ -784,17 +784,28 @@ async def stworz(interaction: discord.Interaction):
     dane = wczytaj_dane()
 
     if user_id in dane["salony"]:
-        await interaction.response.send_message("Masz już swój salon!")
+        embed = discord.Embed(
+            title="❌ Masz już salon!",
+            description="Nie możesz mieć więcej niż jednego salonu.",
+            color=discord.Color.red()
+        )
+        await interaction.response.send_message(embed=embed, ephemeral=True)
         return
 
-    # Tworzymy nowy salon z 3 miejscami na auta i pustą listą aut
     dane["salony"][user_id] = {
         "miejsca": 3,
         "auta": []
     }
 
     zapisz_dane(dane)
-    await interaction.response.send_message("🎉 Twój salon został stworzony! Masz 3 miejsca na auta.")
+
+    embed = discord.Embed(
+        title="🚗 Salon utworzony!",
+        description="🎉 Twój salon został pomyślnie stworzony!\nMasz teraz **3 miejsca** na auta.",
+        color=discord.Color.green()
+    )
+    await interaction.response.send_message(embed=embed)
+
 
 def wczytaj_dane():
     if not os.path.isfile(DATA_FILE):
