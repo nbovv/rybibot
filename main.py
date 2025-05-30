@@ -147,14 +147,18 @@ async def sprawdz_zadania():
 # Event on_ready
 @bot.event
 async def on_ready():
-    print(f"✅ Bot działa jako {bot.user}")
-    sprawdz_zadania.start()
-    heartbeat.start()
-    wysylaj_wiadomosc.start()
-    await bot.load_extension("cogs.dealer_game")
-    await tree.sync()
-    print("✅ Slash komendy zsynchronizowane!")
+    print(f"✅ Zalogowano jako {bot.user}")
+    try:
+        synced = await bot.tree.sync()
+        print(f"🌐 Slash komendy zsynchronizowane ({len(synced)}).")
+    except Exception as e:
+        print(f"❌ Błąd synchronizacji: {e}")
 
+async def load_cogs():
+    for filename in os.listdir("./cogs"):
+        if filename.endswith(".py"):
+            await bot.load_extension(f"cogs.{filename[:-3]}")
+            print(f"🔌 Załadowano cog: {filename}")
 
 #@tasks.loop(hours=2)
 #async def wysylaj_wiadomosc():
