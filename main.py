@@ -11,6 +11,8 @@ logging.basicConfig(level=logging.INFO)
 intents = discord.Intents.all()
 bot = commands.Bot(command_prefix="!", intents=intents)
 
+bot.load_extension("cogs.dealer_game")
+
 @bot.event
 async def on_ready():
     print(f"✅ Zalogowano jako {bot.user}")
