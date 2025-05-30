@@ -900,6 +900,45 @@ async def katalog_aut(interaction: discord.Interaction):
         embed.add_field(name=f"{auto['brand']} {auto['model']}", value=f"Cena: {auto['price']} zł", inline=False)
     await interaction.response.send_message(embed=embed, ephemeral=True)
 
+@bot.tree.command(name="kup_auto", description="Kup auto z katalogu do swojego salonu")
+@app_commands.describe(numer="Numer auta z katalogu (1, 2, 3...)")
+async def kup_auto(interaction: discord.Interaction, numer: int):
+    user_id = str(interaction.user.id)
+    dane = wczytaj_dane()
+
+    if user_id not in dane["salony"]:
+        await interaction.response.send_message("❌ Najpierw stwórz salon komendą /stworz", ephemeral=True)
+        return
+
+    if numer < 1 or numer > len(KATALOG_AUT):
+        await interaction.response.send_message("❌ Niepoprawny numer auta z katalogu.", ephemeral=True)
+        return
+
+    auto = KATALOG_AUT[numer - 1]
+    cena = auto["price"]
+
+    # Sprawdzamy czy gracz ma konto i kasę
+    if user_id not in dane.get("gracze", {}):
+        dane.setdefault("gracze", {})[user_id] = {"pieniadze": 100000}  # startowa kasa
+
+    pieniadze = dane["gracze"][user_id].get("pieniadze", 0)
+
+    if pieniadze < cena:
+        await interaction.response.send_message(f"❌ Nie masz wystarczająco pieniędzy. Potrzebujesz {cena} zł.", ephemeral=True)
+        return
+
+    # Odejmujemy kasę
+    dane["gracze"][user_id]["pieniadze"] = pieniadze - cena
+
+    # Dodajemy auto do salonu (lista aut w salonie)
+    dane["salony"].setdefault(user_id, {"auta": [], "wartosc": 0, "nazwa": "Twój salon"})
+    dane["salony"][user_id]["auta"].append(auto)
+    dane["salony"][user_id]["wartosc"] += cena
+
+    zapisz_dane(dane)
+
+    await interaction.response.send_message(f"✅ Kupiłeś {auto['brand']} {auto['model']} za {cena} zł i dodano do salonu.", ephemeral=True)
+
 
 @bot.event
 async def on_message(message):
