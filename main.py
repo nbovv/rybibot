@@ -842,6 +842,8 @@ class PotwierdzenieUsuniecia(ui.View):
             return
 
         self.dane["salony"].pop(self.user_id, None)
+        if "salony" in self.dane:
+            self.dane["salony"].pop(self.user_id, None)
         if "gracze" in self.dane:
             self.dane["gracze"].pop(self.user_id, None)
 
