@@ -1,100 +1,103 @@
 import discord
+from discord import app_commands
 from discord.ext import commands
 import json
 import os
 
-DATA_FILE = "dealer_data.json"
-CAR_CATALOG_FILE = "car_catalog.json"
-
-def load_data():
-    if not os.path.exists(DATA_FILE):
-        with open(DATA_FILE, "w") as f:
-            json.dump({}, f)
-    with open(DATA_FILE, "r") as f:
-        return json.load(f)
-
-def save_data(data):
-    with open(DATA_FILE, "w") as f:
-        json.dump(data, f, indent=4)
-
-def load_catalog():
-    with open(CAR_CATALOG_FILE, "r") as f:
-        return json.load(f)
-
 class DealerGame(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
-        self.catalog = load_catalog()
+        self.DATA_FILE = "dealer_data.json"
+        self.CATALOG_FILE = "car_catalog.json"
+        self.catalog = self.load_catalog()
 
-    @commands.command()
-    async def startdealer(self, ctx):
-        data = load_data()
-        user_id = str(ctx.author.id)
+    def load_data(self):
+        if not os.path.exists(self.DATA_FILE):
+            with open(self.DATA_FILE, "w") as f:
+                json.dump({}, f)
+        with open(self.DATA_FILE, "r") as f:
+            return json.load(f)
+
+    def save_data(self, data):
+        with open(self.DATA_FILE, "w") as f:
+            json.dump(data, f, indent=4)
+
+    def load_catalog(self):
+        with open(self.CATALOG_FILE, "r") as f:
+            return json.load(f)
+
+    @app_commands.command(name="startdealer", description="Załóż własny salon samochodowy")
+    async def startdealer(self, interaction: discord.Interaction):
+        data = self.load_data()
+        user_id = str(interaction.user.id)
+
         if user_id in data:
-            await ctx.send("🔧 Już masz swój salon samochodowy.")
+            await interaction.response.send_message("🔧 Już masz swój salon samochodowy.", ephemeral=True)
             return
 
         data[user_id] = {
             "money": 100000,
             "dealer": {
-                "name": f"Salon {ctx.author.name}",
+                "name": f"Salon {interaction.user.name}",
                 "cars": []
             }
         }
-        save_data(data)
-        await ctx.send(f"✅ Salon **{ctx.author.name}** został utworzony! Masz 100 000$ na start.")
+        self.save_data(data)
+        await interaction.response.send_message(f"✅ Salon **{interaction.user.name}** został utworzony! Masz 100 000$ na start.")
 
-    @commands.command()
-    async def katalog(self, ctx):
-        msg = "**📘 Katalog aut dostępnych do kupienia:**\n"
+    @app_commands.command(name="katalog", description="Wyświetla katalog dostępnych aut")
+    async def katalog(self, interaction: discord.Interaction):
+        msg = "**📘 Katalog aut:**\n"
         for car in self.catalog:
             msg += f"- {car['brand']} {car['model']} — ${car['price']}\n"
-        await ctx.send(msg)
+        await interaction.response.send_message(msg)
 
-    @commands.command()
-    async def buycar(self, ctx, brand: str, *, model: str):
-        data = load_data()
-        user_id = str(ctx.author.id)
+    @app_commands.command(name="kupauto", description="Kup auto do swojego salonu")
+    @app_commands.describe(marka="Marka auta", model="Model auta")
+    async def kupauto(self, interaction: discord.Interaction, marka: str, model: str):
+        data = self.load_data()
+        user_id = str(interaction.user.id)
+
         if user_id not in data:
-            await ctx.send("❌ Najpierw załóż salon komendą `!startdealer`.")
+            await interaction.response.send_message("❌ Najpierw załóż salon komendą `/startdealer`.", ephemeral=True)
             return
 
-        # Szukaj auta w katalogu
-        car = next((c for c in self.catalog if c["brand"].lower() == brand.lower() and c["model"].lower() == model.lower()), None)
+        car = next((c for c in self.catalog if c["brand"].lower() == marka.lower() and c["model"].lower() == model.lower()), None)
         if not car:
-            await ctx.send("🚫 Nie znaleziono takiego auta w katalogu.")
+            await interaction.response.send_message("🚫 Nie znaleziono takiego auta w katalogu.", ephemeral=True)
             return
 
         if data[user_id]["money"] < car["price"]:
-            await ctx.send("💸 Nie masz wystarczająco pieniędzy.")
+            await interaction.response.send_message("💸 Nie masz wystarczająco pieniędzy.", ephemeral=True)
             return
 
         data[user_id]["money"] -= car["price"]
         data[user_id]["dealer"]["cars"].append(car)
-        save_data(data)
-        await ctx.send(f"✅ Kupiono {car['brand']} {car['model']} za ${car['price']}!")
+        self.save_data(data)
+        await interaction.response.send_message(f"✅ Kupiono {car['brand']} {car['model']} za ${car['price']}!")
 
-    @commands.command()
-    async def autosalon(self, ctx):
-        data = load_data()
-        user_id = str(ctx.author.id)
+    @app_commands.command(name="autosalon", description="Pokaż auta w swoim salonie")
+    async def autosalon(self, interaction: discord.Interaction):
+        data = self.load_data()
+        user_id = str(interaction.user.id)
+
         if user_id not in data:
-            await ctx.send("❌ Najpierw załóż salon komendą `!startdealer`.")
+            await interaction.response.send_message("❌ Najpierw załóż salon komendą `/startdealer`.", ephemeral=True)
             return
 
         cars = data[user_id]["dealer"]["cars"]
         if not cars:
-            await ctx.send("🚗 Twój salon nie ma jeszcze żadnych aut.")
+            await interaction.response.send_message("🚗 Twój salon nie ma jeszcze żadnych aut.")
             return
 
-        msg = f"**🚘 Auta w salonie {ctx.author.name}:**\n"
+        msg = f"**🚘 Auta w salonie {interaction.user.name}:**\n"
         total_value = 0
         for car in cars:
             msg += f"- {car['brand']} {car['model']} — ${car['price']}\n"
             total_value += car["price"]
 
         msg += f"\n💰 Łączna wartość salonu: ${total_value}"
-        await ctx.send(msg)
+        await interaction.response.send_message(msg)
 
 async def setup(bot):
     await bot.add_cog(DealerGame(bot))
