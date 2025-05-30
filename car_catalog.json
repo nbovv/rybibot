@@ -1,0 +1,13 @@
+[
+  { "brand": "BMW", "model": "M3 E92", "price": 65000 },
+  { "brand": "Nissan", "model": "Skyline R34", "price": 70000 },
+  { "brand": "Toyota", "model": "Supra MK4", "price": 72000 },
+  { "brand": "Audi", "model": "RS6 Avant", "price": 80000 },
+  { "brand": "Mercedes", "model": "AMG GT", "price": 120000 },
+  { "brand": "Porsche", "model": "911 Turbo", "price": 150000 },
+  { "brand": "Honda", "model": "Civic Type R", "price": 45000 },
+  { "brand": "Mazda", "model": "RX-7", "price": 67000 },
+  { "brand": "Subaru", "model": "Impreza WRX", "price": 60000 },
+  { "brand": "Lamborghini", "model": "Huracan", "price": 250000 },
+  { "brand": "Ferrari", "model": "488 GTB", "price": 280000 }
+]
