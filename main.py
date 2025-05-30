@@ -11,6 +11,8 @@ logging.basicConfig(level=logging.INFO)
 
 DATA_FILE = "/var/data/dealer_data.json"
 
+from auta import KATALOG_AUT
+
 #def save_user_roles(user_id, role_ids):
     #"""Zapisz role użytkownika do pliku."""
     #if not os.path.exists("roles.json"):
