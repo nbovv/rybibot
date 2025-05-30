@@ -893,14 +893,12 @@ async def usun_salon(interaction: discord.Interaction):
         view=view, ephemeral=True
     )
 
-@bot.tree.command(name="katalog_aut", description="Pokaż dostępne auta do kupienia")
+@bot.tree.command(name="katalog_aut", description="Wyświetl katalog dostępnych aut")
 async def katalog_aut(interaction: discord.Interaction):
-    embed = discord.Embed(title="🚘 Katalog Aut", color=discord.Color.blue())
-
-    for klucz, auto in KATALOG_AUT.items():
-        embed.add_field(name=auto["nazwa"], value=f'💰 Cena: {auto["cena"]} 💵\nID: `{klucz}`', inline=False)
-
-    await interaction.response.send_message(embed=embed)
+    embed = discord.Embed(title="Katalog aut", color=discord.Color.blue())
+    for auto in KATALOG_AUT:
+        embed.add_field(name=f"{auto['brand']} {auto['model']}", value=f"Cena: {auto['price']} zł", inline=False)
+    await interaction.response.send_message(embed=embed, ephemeral=True)
 
 
 @bot.event
