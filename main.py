@@ -9,7 +9,7 @@ import logging
 logging.basicConfig(level=logging.INFO)
 
 intents = discord.Intents.all()
-bot = discord.Bot(intents=intents)
+bot = commands.Bot(command_prefix="!", intents=intents)
 
 bot.load_extension("cogs.dealer_game")
 
