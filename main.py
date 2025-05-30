@@ -13,9 +13,14 @@ bot = commands.Bot(command_prefix="!", intents=intents)
 
 @bot.event
 async def on_ready():
-    for filename in os.listdir("./cogs"):
-        if filename.endswith(".py"):
-            await bot.load_extension("dealer_game")  # jeśli dealer_game.py jest w tym samym katalogu co mainly.py
+    await bot.tree.sync()
+    print(f"✅ Zalogowano jako {bot.user}")
+
+# Ładowanie cogów
+for filename in os.listdir("./cogs"):
+    if filename.endswith(".py"):
+        bot.load_extension(f"cogs.{filename[:-3]}")
+        print(f"🔌 Załadowano: {filename}")
 
 #def save_user_roles(user_id, role_ids):
     #"""Zapisz role użytkownika do pliku."""
