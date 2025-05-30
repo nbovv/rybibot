@@ -842,17 +842,17 @@ class PotwierdzenieUsuniecia(ui.View):
             return
 
     # Usuń dane gracza i salonu, jeśli istnieją
-    if "salony" in self.dane:
-        self.dane["salony"].pop(self.user_id, None)
-    if "gracze" in self.dane:
-        self.dane["gracze"].pop(self.user_id, None)
+        if "salony" in self.dane:
+            self.dane["salony"].pop(self.user_id, None)
+        if "gracze" in self.dane:
+            self.dane["gracze"].pop(self.user_id, None)
 
     # ZAPISZ ZMIANY DO PLIKU
-    zapisz_dane(self.dane)
+        zapisz_dane(self.dane)
 
-    await interaction.response.edit_message(content="✅ Twój salon został usunięty.", view=None)
-    self.odpowiedziano = True
-    self.stop()
+        await interaction.response.edit_message(content="✅ Twój salon został usunięty.", view=None)
+        self.odpowiedziano = True
+        self.stop()
 
 
 
