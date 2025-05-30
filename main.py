@@ -836,18 +836,18 @@ class PotwierdzenieUsuniecia(ui.View):
         self.odpowiedziano = False
 
     @ui.button(label="🗑️ Tak, usuń", style=discord.ButtonStyle.danger)
-    async def potwierdz(self, interaction: discord.Interaction):
-        if interaction.user.id != self.user_id:
-            await interaction.response.send_message("To nie jest Twoje potwierdzenie.", ephemeral=True)
+    async def potwierdz(self, interaction: discord.Interaction, button: ui.Button):Add commentMore actions
+        if interaction.user.id != int(self.user_id):
+            await interaction.response.send_message("❌ To nie jest Twoja decyzja!", ephemeral=True)
             return
 
-    # Bezpieczne czyszczenie danych
-    self.dane.get("salony", {}).pop(self.user_id, None)
-    self.dane.get("gracze", {}).pop(self.user_id, None)
+        if "salony" in self.dane:
+            self.dane["salony"].pop(self.user_id, None)
+        if "gracze" in self.dane:
+            self.dane["gracze"].pop(self.user_id, None)
 
-    zapisz_dane(self.dane)
-    await interaction.response.edit_message(content="🗑️ Twój salon został usunięty.", view=None)
-
+            
+        await interaction.response.edit_message(content="✅ Twój salon został usunięty.", view=None)
         self.odpowiedziano = True
         self.stop()
 
