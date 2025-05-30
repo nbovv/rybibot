@@ -6,8 +6,12 @@ import os
 from datetime import datetime, timedelta
 from dotenv import load_dotenv
 import logging
+import asyncio
 logging.basicConfig(level=logging.INFO)
 
+async def main():
+    async with bot:
+        await bot.load_extension("dealer")
 
 #def save_user_roles(user_id, role_ids):
     #"""Zapisz role użytkownika do pliku."""
@@ -789,11 +793,4 @@ async def on_message(message):
 # keep_alive()
 
 # Uruchomienie bota
-import asyncio
-
-async def main():
-    async with bot:
-        await bot.load_extension("dealer")  # jeśli dealer.py jest w tym samym folderze
-        await bot.start("TOKEN")
-
-asyncio.run(main())
+bot.run(TOKEN)
