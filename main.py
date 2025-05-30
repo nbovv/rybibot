@@ -789,4 +789,11 @@ async def on_message(message):
 # keep_alive()
 
 # Uruchomienie bota
-bot.run(TOKEN)
+import asyncio
+
+async def main():
+    async with bot:
+        await bot.load_extension("dealer")  # jeśli dealer.py jest w tym samym folderze
+        await bot.start("TOKEN")
+
+asyncio.run(main())
