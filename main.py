@@ -19,7 +19,7 @@ async def on_ready():
 # Ładowanie cogów
 for filename in os.listdir("./cogs"):
     if filename.endswith(".py"):
-        bot.load_extension(f"cogs.{filename[:-3]}")
+        await bot.load_extension(f"cogs.{filename[:-3]}")
         print(f"🔌 Załadowano: {filename}")
 
 #def save_user_roles(user_id, role_ids):
