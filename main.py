@@ -11,7 +11,8 @@ logging.basicConfig(level=logging.INFO)
 
 DATA_FILE = "/var/data/dealer_data.json"
 
-from auta import KATALOG_AUT
+with open("auta.json", "r", encoding="utf-8") as f:
+    KATALOG_AUT = json.load(f)  # KATALOG_AUT to lista słowników
 
 #def save_user_roles(user_id, role_ids):
     #"""Zapisz role użytkownika do pliku."""
