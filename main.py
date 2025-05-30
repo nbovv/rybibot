@@ -776,6 +776,11 @@ async def unmute(interaction: discord.Interaction, member: discord.Member):
     )
     await interaction.response.send_message(embed=embed)
 
+# Komenda slash
+@bot.tree.command(name="stworz", description="Stwórz salon samochodowy")
+async def stworz(interaction: discord.Interaction):
+    await interaction.response.send_message("Salon został stworzony!")
+
 
 @bot.event
 async def on_message(message):
