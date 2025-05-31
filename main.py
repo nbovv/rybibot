@@ -1086,9 +1086,22 @@ def generuj_ceny_aut():
     ]
 
 def sprawdz_aktualizacje(dane):
-    dzisiaj = datetime.now().strftime("%Y-%m-%d")
-    if dane.get("ostatnia_aktualizacja") != dzisiaj:
-        dane["ostatnia_aktualizacja"] = dzisiaj
+    teraz = datetime.now()
+    ostatnia = dane.get("ostatnia_aktualizacja")
+
+    if ostatnia is None:
+        ostatnia = teraz - timedelta(days=1)  # jeśli brak daty, wymuś aktualizację
+    else:
+        # Jeśli masz timestamp w formacie string, zamień na datetime
+        if isinstance(ostatnia, str):
+            try:
+                ostatnia = datetime.fromisoformat(ostatnia)
+            except Exception:
+                ostatnia = teraz - timedelta(days=1)  # zabezpieczenie na wypadek błędu
+
+    # Jeśli minęła 1 godzina (3600 sekund) od ostatniej aktualizacji, wykonaj aktualizację
+    if (teraz - ostatnia).total_seconds() > 1800:
+        dane["ostatnia_aktualizacja"] = teraz.isoformat()
         dane["ceny"] = generuj_ceny_aut()
 
         # Aktualizuj wartość salonów
