@@ -1026,9 +1026,9 @@ def sprawdz_aktualizacje(dane):
 
     pieniadze = dane["gracze"][user_id].get("pieniadze", 0)
 
-    await interaction.response.send_message(
-        f"💰 Masz {pieniadze} pieniędzy.", ephemeral=True
-    )
+        await interaction.response.send_message(
+            f"💰 Masz {pieniadze} pieniędzy.", ephemeral=True
+        )
 
 
 @bot.tree.command(name="ranking", description="Zobacz ranking najlepszych salonów")
