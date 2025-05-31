@@ -1017,19 +1017,6 @@ def sprawdz_aktualizacje(dane):
 
         zapisz_dane(dane)
 
-@bot.tree.command(name="katalog_aut", description="Wyświetl katalog aut")
-async def katalog_aut(interaction: discord.Interaction):
-    dane = wczytaj_dane()
-    embed = discord.Embed(title="📋 Katalog aut (ceny dynamiczne)", color=discord.Color.blue())
-
-    for idx, auto in enumerate(dane["ceny"], start=1):
-        embed.add_field(
-            name=f"{idx}. {auto['brand']} {auto['model']}",
-            value=f"Cena: {auto['price']} zł",
-            inline=False
-        )
-
-    await interaction.response.send_message(embed=embed, ephemeral=True)
 
 @bot.tree.command(name="salon", description="Zobacz swój salon")
 async def salon(interaction: discord.Interaction):
