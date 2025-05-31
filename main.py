@@ -1001,6 +1001,42 @@ async def balans(interaction: discord.Interaction):
         f"💰 Masz {pieniadze} pieniędzy.", ephemeral=True
     )
 
+@bot.tree.command(name="salon", description="Wyświetl swój salon samochodowy")
+async def salon(interaction: discord.Interaction):
+    user_id = str(interaction.user.id)
+    dane = wczytaj_dane()
+
+    if user_id not in dane["salony"] or user_id not in dane["gracze"]:
+        await interaction.response.send_message(
+            embed=discord.Embed(
+                title="❌ Błąd",
+                description="Nie masz jeszcze salonu. Użyj `/stworz`, aby go założyć.",
+                color=discord.Color.red()
+            ),
+            ephemeral=True
+        )
+        return
+
+    salon = dane["salony"][user_id]
+    gracz = dane["gracze"][user_id]
+
+    auta = salon["auta"]
+    if auta:
+        auta_lista = "\n".join([f"{i+1}. {a['brand']} {a['model']}" for i, a in enumerate(auta)])
+    else:
+        auta_lista = "Brak aut w salonie."
+
+    embed = discord.Embed(
+        title=f"🚗 {salon['nazwa']}",
+        color=discord.Color.blue()
+    )
+    embed.add_field(name="💰 Saldo", value=f"{gracz['pieniadze']} zł", inline=False)
+    embed.add_field(name="📦 Wartość salonu", value=f"{salon['wartosc']} zł", inline=False)
+    embed.add_field(name="🚘 Auta", value=auta_lista, inline=False)
+
+    await interaction.response.send_message(embed=embed, ephemeral=True)
+
+
 @bot.event
 async def on_message(message):
         if message.author.bot:
