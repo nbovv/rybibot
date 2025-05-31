@@ -1101,6 +1101,204 @@ async def ranking(interaction: discord.Interaction):
 
     await interaction.response.send_message(embed=embed, ephemeral=False)
 
+def wczytaj_dane():
+    try:
+        with open(DATA_FILE, "r", encoding="utf-8") as f:
+            dane = json.load(f)
+    except FileNotFoundError:
+        dane = {}
+
+    if "salony" not in dane:
+        dane["salony"] = {}
+    if "gracze" not in dane:
+        dane["gracze"] = {}
+    if "ceny" not in dane:
+        dane["ceny"] = generuj_ceny_aut()
+    if "ostatnia_aktualizacja" not in dane:
+        dane["ostatnia_aktualizacja"] = ""
+
+    sprawdz_aktualizacje(dane)
+    return dane
+
+def zapisz_dane(dane):
+    with open(DATA_FILE, "w", encoding="utf-8") as f:
+        json.dump(dane, f, indent=4)
+
+def generuj_ceny_aut():
+    return [
+        {
+            "brand": auto["brand"],
+            "model": auto["model"],
+            "price": int(auto["base_price"] * random.uniform(0.85, 1.15))
+        }
+        for auto in BAZOWY_KATALOG
+    ]
+
+def sprawdz_aktualizacje(dane):
+    dzisiaj = datetime.now().strftime("%Y-%m-%d")
+    if dane.get("ostatnia_aktualizacja") != dzisiaj:
+        dane["ostatnia_aktualizacja"] = dzisiaj
+        dane["ceny"] = generuj_ceny_aut()
+
+        # Aktualizuj wartość salonów
+        for salon in dane["salony"].values():
+            salon["wartosc"] = sum(
+                next((a["price"] for a in dane["ceny"] if a["brand"] == auto["brand"] and a["model"] == auto["model"]), 0)
+                for auto in salon["auta"]
+            )
+
+        zapisz_dane(dane)
+
+@bot.tree.command(name="katalog_aut", description="Wyświetl katalog aut")
+async def katalog_aut(interaction: discord.Interaction):
+    dane = wczytaj_dane()
+    embed = discord.Embed(title="📋 Katalog aut (ceny dynamiczne)", color=discord.Color.blue())
+
+    for idx, auto in enumerate(dane["ceny"], start=1):
+        embed.add_field(
+            name=f"{idx}. {auto['brand']} {auto['model']}",
+            value=f"Cena: {auto['price']} zł",
+            inline=False
+        )
+
+    await interaction.response.send_message(embed=embed, ephemeral=True)
+
+@bot.tree.command(name="salon", description="Zobacz swój salon")
+async def salon(interaction: discord.Interaction):
+    dane = wczytaj_dane()
+    user_id = str(interaction.user.id)
+
+    if user_id not in dane["salony"]:
+        await interaction.response.send_message(embed=discord.Embed(description="❌ Nie masz jeszcze salonu.", color=discord.Color.red()), ephemeral=True)
+        return
+
+    salon = dane["salony"][user_id]
+    embed = discord.Embed(title=f"🏢 {salon['nazwa']}", color=discord.Color.green())
+    embed.add_field(name="💰 Wartość salonu", value=f"{salon['wartosc']} zł", inline=False)
+    auta = salon["auta"]
+    if auta:
+        for auto in auta:
+            embed.add_field(name=f"{auto['brand']} {auto['model']}", value=f"Szacowana wartość: {auto['price']} zł", inline=False)
+    else:
+        embed.add_field(name="Brak aut", value="Kup coś w katalogu!", inline=False)
+
+    await interaction.response.send_message(embed=embed, ephemeral=True)
+
+
+# --- Komenda sprzedaży auta z klientami zwykłymi i premium ---
+
+@bot.tree.command(name="sprzedaj_auto", description="Spróbuj sprzedać wybrane auto z salonu klientowi")
+@app_commands.describe(numer="Numer auta z Twojego salonu do sprzedaży")
+async def sprzedaj_auto(interaction: discord.Interaction, numer: int):
+    dane = wczytaj_dane()
+    user_id = str(interaction.user.id)
+
+    if user_id not in dane["salony"] or not dane["salony"][user_id]["auta"]:
+        await interaction.response.send_message(
+            embed=discord.Embed(description="❌ Nie masz aut do sprzedaży.", color=discord.Color.red()),
+            ephemeral=True
+        )
+        return
+
+    auta = dane["salony"][user_id]["auta"]
+
+    if numer < 1 or numer > len(auta):
+        await interaction.response.send_message(
+            embed=discord.Embed(description="❌ Niepoprawny numer auta.", color=discord.Color.red()),
+            ephemeral=True
+        )
+        return
+
+    auto = auta[numer - 1]
+
+    # Sprawdź, czy klient się pojawi
+    if random.random() > 0.7:  # 30% szans że nikt nie chce kupić
+        await interaction.response.send_message(
+            embed=discord.Embed(description="😞 Dziś brak chętnych klientów na to auto.", color=discord.Color.dark_grey()),
+            ephemeral=True
+        )
+        return
+
+    # Sprawdź, czy klient premium (20% szans)
+    klient_premium = random.random() < 0.2
+
+    # Znajdź aktualną wartość z katalogu
+    dane_ceny = next((a for a in dane["ceny"] if a["brand"] == auto["brand"] and a["model"] == auto["model"]), None)
+    if not dane_ceny:
+        await interaction.response.send_message(
+            embed=discord.Embed(description="❌ Nie udało się znaleźć ceny katalogowej.", color=discord.Color.red()),
+            ephemeral=True
+        )
+        return
+
+    cena_katalogowa = dane_ceny["price"]
+
+    if klient_premium:
+        # Premium klient - lepsza oferta i wyższe prawdopodobieństwo zaakceptowania
+        cena_oferta = int(random.uniform(1.05, 1.3) * cena_katalogowa)
+        cena_oferta = max(cena_oferta, auto["price"])
+        opis_klienta = "✨ Klient premium"
+        kolor_embed = discord.Color.gold()
+    else:
+        # Zwykły klient
+        cena_oferta = int(random.uniform(0.8, 1.2) * cena_katalogowa)
+        cena_oferta = max(cena_oferta, auto["price"])
+        opis_klienta = "Klient standardowy"
+        kolor_embed = discord.Color.orange()
+
+    embed = discord.Embed(
+        title="💼 Oferta sprzedaży",
+        description=(
+            f"📢 {opis_klienta} chce kupić **{auto['brand']} {auto['model']}**.\n"
+            f"💵 Oferuje: **{cena_oferta} zł**\n\n"
+            "✅ Akceptujesz tę ofertę?"
+        ),
+        color=kolor_embed
+    )
+
+    view = PotwierdzenieSprzedazy(auto, cena_oferta, dane, user_id)
+    await interaction.response.send_message(embed=embed, view=view, ephemeral=True)
+
+
+class PotwierdzenieSprzedazy(ui.View):
+    def __init__(self, auto, cena, dane, user_id):
+        super().__init__(timeout=30)
+        self.auto = auto
+        self.cena = cena
+        self.dane = dane
+        self.user_id = user_id
+
+    @ui.button(label="✅ Sprzedaj", style=discord.ButtonStyle.green)
+    async def sprzedaj(self, interaction: discord.Interaction, button: ui.Button):
+        salon = self.dane["salony"][self.user_id]
+        gracz = self.dane["gracze"][self.user_id]
+
+        if self.auto not in salon["auta"]:
+            await interaction.response.send_message("❌ Auto zostało już sprzedane lub nie istnieje.", ephemeral=True)
+            return
+
+        salon["auta"].remove(self.auto)
+        salon["wartosc"] -= next((a["price"] for a in self.dane["ceny"]
+                                  if a["brand"] == self.auto["brand"] and a["model"] == self.auto["model"]), 0)
+        gracz["pieniadze"] += self.cena
+        zapisz_dane(self.dane)
+
+        await interaction.response.edit_message(
+            embed=discord.Embed(
+                description=f"✅ Sprzedałeś **{self.auto['brand']} {self.auto['model']}** za **{self.cena} zł**.",
+                color=discord.Color.green()
+            ),
+            view=None
+        )
+        self.stop()
+
+    @ui.button(label="❌ Odrzuć", style=discord.ButtonStyle.red)
+    async def anuluj(self, interaction: discord.Interaction, button: ui.Button):
+        await interaction.response.edit_message(
+            embed=discord.Embed(description="❎ Odrzuciłeś ofertę sprzedaży.", color=discord.Color.greyple()),
+            view=None
+        )
+        self.stop()
 
 @bot.event
 async def on_message(message):
