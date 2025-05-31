@@ -781,46 +781,33 @@ async def unmute(interaction: discord.Interaction, member: discord.Member):
     await interaction.response.send_message(embed=embed)
 
 # Komenda slash
-@bot.tree.command(name="stworz", description="Stwórz swój salon samochodowy")
+@bot.tree.command(name="stworz", description="Stwórz swój salon")
 async def stworz(interaction: discord.Interaction):
     user_id = str(interaction.user.id)
     dane = wczytaj_dane()
 
-    if user_id in dane["salony"]:
-        embed = discord.Embed(
-            title="❌ Masz już salon!",
-            description="Nie możesz mieć więcej niż jednego salonu.",
-            color=discord.Color.red()
-        )
-        await interaction.response.send_message(embed=embed, ephemeral=True)
+    if user_id in dane.get("salony", {}):
+        await interaction.response.send_message("❌ Masz już stworzony salon.", ephemeral=True)
         return
 
+    if "salony" not in dane:
+        dane["salony"] = {}
+
+    if "gracze" not in dane:
+        dane["gracze"] = {}
+
     dane["salony"][user_id] = {
-        "miejsca": 3,
+        "nazwa": f"Salon {interaction.user.display_name}",
         "auta": []
     }
 
-    dane["salony"][user_id] = {
-        "miejsca": 3,
-        "auta": []
-    }
     dane["gracze"][user_id] = {
-        "pieniadze": 100000
+        "pieniadze": 10000
     }
 
-    dane["salony"][user_id] = {
-    "nazwa": nazwa_salonu,
-    "auta": [],
-    "wartosc": 0
-    }
     zapisz_dane(dane)
+    await interaction.response.send_message("✅ Twój salon został stworzony!", ephemeral=True)
 
-    embed = discord.Embed(
-        title="🚗 Salon utworzony!",
-        description="🎉 Twój salon został pomyślnie stworzony!\nMasz teraz **3 miejsca** na auta i 100k na start.",
-        color=discord.Color.green()
-    )
-    await interaction.response.send_message(embed=embed)
 
 
 def wczytaj_dane():
