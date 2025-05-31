@@ -1447,7 +1447,12 @@ TUNING_VALUE_INCREASE_PERCENT = {
 async def tunuj(interaction: discord.Interaction, czesc: str):
     czesc = czesc.lower()
     if czesc not in TUNING_BASE_COSTS:
-        await interaction.response.send_message(f"❌ Nieznana część tuningu: {czesc}", ephemeral=True)
+        embed = discord.Embed(
+            title="❌ Błąd",
+            description=f"Nieznana część tuningu: **{czesc}**",
+            color=discord.Color.red()
+        )
+        await interaction.response.send_message(embed=embed, ephemeral=True)
         return
 
     dane = wczytaj_dane()
@@ -1455,7 +1460,11 @@ async def tunuj(interaction: discord.Interaction, czesc: str):
     gracz = dane["gracze"].get(user_id)
 
     if not gracz or "auto_prywatne" not in gracz:
-        await interaction.response.send_message("❌ Nie posiadasz prywatnego auta do tuningu.", ephemeral=True)
+        embed = discord.Embed(
+            description="❌ Nie posiadasz prywatnego auta do tuningu.",
+            color=discord.Color.red()
+        )
+        await interaction.response.send_message(embed=embed, ephemeral=True)
         return
 
     auto = gracz["auto_prywatne"]
@@ -1471,25 +1480,25 @@ async def tunuj(interaction: discord.Interaction, czesc: str):
     obecny_poziom = tuning.get(czesc, 0)
     nowy_poziom = obecny_poziom + 1
 
-    # Koszt rośnie liniowo wraz z poziomem, np: base_cost * nowy_poziom
     koszt = TUNING_BASE_COSTS[czesc] * nowy_poziom
 
     if gracz["pieniadze"] < koszt:
-        await interaction.response.send_message(
-            f"❌ Nie masz wystarczająco pieniędzy na zakup poziomu {nowy_poziom} części '{czesc}'. "
-            f"Koszt: {koszt} zł.",
-            ephemeral=True
+        embed = discord.Embed(
+            title="❌ Za mało pieniędzy",
+            description=(
+                f"Nie masz wystarczająco pieniędzy na zakup poziomu {nowy_poziom} części **{czesc}**.\n"
+                f"Koszt: **{koszt} zł**."
+            ),
+            color=discord.Color.red()
         )
+        await interaction.response.send_message(embed=embed, ephemeral=True)
         return
 
-    # Zwiększamy poziom części
     tuning[czesc] = nowy_poziom
     auto["tuning"] = tuning
 
-    # Odejmujemy kasę
     gracz["pieniadze"] -= koszt
 
-    # Zwiększamy wartość auta o procent zależny od poziomu i części
     procent_zwiekszenia = TUNING_VALUE_INCREASE_PERCENT[czesc] * nowy_poziom
     wartosc_bazowa = auto.get("price", 0)
     wartosc_nowa = int(wartosc_bazowa * (1 + procent_zwiekszenia / 100))
@@ -1497,12 +1506,17 @@ async def tunuj(interaction: discord.Interaction, czesc: str):
 
     zapisz_dane(dane)
 
-    await interaction.response.send_message(
-        f"✅ Udało się kupić tuning '{czesc}' poziom {nowy_poziom}! Koszt: {koszt} zł.\n"
-        f"Wartość auta wzrosła do {wartosc_nowa} zł.\n"
-        f"Pozostało Ci {gracz['pieniadze']} zł.",
-        ephemeral=True
+    embed = discord.Embed(
+        title="✅ Tuning zakupiony!",
+        description=(
+            f"Udało się kupić tuning **{czesc}** poziom **{nowy_poziom}**!\n"
+            f"Koszt: **{koszt} zł**\n"
+            f"Wartość auta wzrosła do **{wartosc_nowa} zł**\n"
+            f"Pozostało Ci **{gracz['pieniadze']} zł**"
+        ),
+        color=discord.Color.green()
     )
+    await interaction.response.send_message(embed=embed, ephemeral=True)
 
 @bot.event
 async def on_message(message):
