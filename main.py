@@ -1495,7 +1495,7 @@ async def tunuj(interaction: discord.Interaction, czesc: str):
 
     # Rosnący koszt bazujący na obecnym poziomie i typie części
     bazowy_koszt = TUNING_BASE_COSTS[czesc]
-    koszt = int(bazowy_koszt * (1.8 ** obecny_poziom))
+    koszt = int(bazowy_koszt * (3.3 ** obecny_poziom))
 
     if gracz["pieniadze"] < koszt:
         embed = discord.Embed(
