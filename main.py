@@ -1621,13 +1621,19 @@ async def zaakceptuj_wyscig(interaction: Interaction):
     moc1 = oblicz_moc(auto1)
     moc2 = oblicz_moc(auto2)
 
-    msg = await interaction.response.send_message(embed=Embed(title="🏁 Wyścig uliczny!", description=f"{bot.get_user(challenger_id).mention} vs {interaction.user.mention}\nStart za 3 sekundy...", color=Color.orange()))
+    await interaction.response.send_message(embed=Embed(
+        title="🏁 Wyścig uliczny!",
+        description=f"{bot.get_user(challenger_id).mention} vs {interaction.user.mention}\nStart za 3 sekundy...",
+        color=Color.orange()
+    ))
     await asyncio.sleep(3)
+
+    msg = await interaction.followup.send(embed=Embed(title="🏁 Wyścig trwa!", description="🔥 Odliczanie zakończone, ruszyli!", color=Color.blurple()), wait=True)
 
     czas_wyscigu = random.randint(15, 30)
     for _ in range(czas_wyscigu):
         komentarz = random.choice(COMMENTARY_MESSAGES).format(driver1=bot.get_user(challenger_id).name, driver2=interaction.user.name)
-        await msg.edit_original_response(embed=Embed(title="🏁 Wyścig trwa!", description=komentarz, color=Color.blurple()))
+        await msg.edit(embed=Embed(title="🏁 Wyścig trwa!", description=komentarz, color=Color.blurple()))
         await asyncio.sleep(1)
 
     wynik1 = moc1 + random.randint(-20, 20)
