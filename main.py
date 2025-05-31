@@ -781,16 +781,29 @@ async def unmute(interaction: discord.Interaction, member: discord.Member):
     await interaction.response.send_message(embed=embed)
 
 # Komenda slash
-@bot.tree.command(name="stworz", description="Stwórz swój salon")
-async def stworz(interaction: discord.Interaction):
-    user_id = str(interaction.user.id)
-    dane = wczytaj_dane()
+def wczytaj_dane():
+    try:
+        with open(DATA_FILE, "r", encoding="utf-8") as f:
+            dane = json.load(f)
+    except FileNotFoundError:
+        dane = {}
 
-    # Upewnij się, że dane mają odpowiednie klucze
+    # Zapewnij, że zawsze masz te klucze
     if "salony" not in dane:
         dane["salony"] = {}
     if "gracze" not in dane:
         dane["gracze"] = {}
+
+    return dane
+
+def zapisz_dane(dane):
+    with open(DATA_FILE, "w", encoding="utf-8") as f:
+        json.dump(dane, f, indent=4)
+
+@bot.tree.command(name="stworz", description="Stwórz swój salon")
+async def stworz(interaction: discord.Interaction):
+    user_id = str(interaction.user.id)
+    dane = wczytaj_dane()
 
     if user_id in dane["salony"]:
         await interaction.response.send_message("❌ Masz już stworzony salon.", ephemeral=True)
@@ -809,33 +822,36 @@ async def stworz(interaction: discord.Interaction):
     zapisz_dane(dane)
     await interaction.response.send_message("✅ Twój salon został stworzony!", ephemeral=True)
 
-
-
-
-
-def wczytaj_dane():
-    try:
-        with open("dane.json", "r", encoding="utf-8") as f:
-            dane = json.load(f)
-    except FileNotFoundError:
-        dane = {}
-
-    if "salony" not in dane:
-        dane["salony"] = {}
-    if "gracze" not in dane:
-        dane["gracze"] = {}
-
-    return dane
-
-
-
-def zapisz_dane(dane):
-    with open(DATA_FILE, "w", encoding="utf-8") as f:
-        json.dump(dane, f, indent=4)
-
 from discord import ui
 
+class PotwierdzenieUsuniecia(ui.View):
+    def __init__(self, interaction, user_id, dane):
+        super().__init__(timeout=30)
+        self.interaction = interaction
+        self.user_id = user_id
+        self.dane = dane
 
+    @ui.button(label="🗑️ Tak, usuń", style=discord.ButtonStyle.danger)
+    async def potwierdz(self, interaction: discord.Interaction, button: ui.Button):
+        if interaction.user.id != int(self.user_id):
+            await interaction.response.send_message("❌ To nie jest Twoja decyzja!", ephemeral=True)
+            return
+
+        self.dane["salony"].pop(self.user_id, None)
+        self.dane["gracze"].pop(self.user_id, None)
+
+        zapisz_dane(self.dane)
+        await interaction.response.edit_message(content="✅ Twój salon został usunięty.", view=None)
+        self.stop()
+
+    @ui.button(label="❌ Anuluj", style=discord.ButtonStyle.secondary)
+    async def anuluj(self, interaction: discord.Interaction, button: ui.Button):
+        if interaction.user.id != int(self.user_id):
+            await interaction.response.send_message("❌ To nie jest Twoja decyzja!", ephemeral=True)
+            return
+
+        await interaction.response.edit_message(content="❎ Anulowano usuwanie salonu.", view=None)
+        self.stop()
 
 @bot.tree.command(name="usun_salon", description="Usuń swój salon (bezpowrotnie)")
 async def usun_salon(interaction: discord.Interaction):
@@ -851,62 +867,6 @@ async def usun_salon(interaction: discord.Interaction):
         "⚠️ Na pewno chcesz usunąć swój salon i konto? Tej operacji nie można cofnąć!",
         view=view, ephemeral=True
     )
-class PotwierdzenieUsuniecia(ui.View):
-    def __init__(self, interaction, user_id, dane):
-        super().__init__(timeout=30)
-        self.interaction = interaction
-        self.user_id = user_id
-        self.dane = dane
-        self.odpowiedziano = False
-
-    @ui.button(label="🗑️ Tak, usuń", style=discord.ButtonStyle.danger)
-    async def potwierdz(self, interaction: discord.Interaction, button: ui.Button):
-        if interaction.user.id != int(self.user_id):
-            await interaction.response.send_message("❌ To nie jest Twoja decyzja!", ephemeral=True)
-            return
-
-    # Usuń dane gracza i salonu, jeśli istnieją
-        if "salony" in self.dane:
-            self.dane["salony"].pop(self.user_id, None)
-        if "gracze" in self.dane:
-            self.dane["gracze"].pop(self.user_id, None)
-            
-
-    # ZAPISZ ZMIANY DO PLIKU
-        zapisz_dane(self.dane)
-
-        await interaction.response.edit_message(content="✅ Twój salon został usunięty.", view=None)
-        self.odpowiedziano = True
-        self.stop()
-
-
-
-    @ui.button(label="❌ Anuluj", style=discord.ButtonStyle.secondary)
-    async def anuluj(self, interaction: discord.Interaction, button: ui.Button):
-        if interaction.user.id != int(self.user_id):
-            await interaction.response.send_message("❌ To nie jest Twoja decyzja!", ephemeral=True)
-            return
-
-        await interaction.response.edit_message(content="❎ Anulowano usuwanie salonu.", view=None)
-        self.odpowiedziano = True
-        self.stop()
-
-@bot.tree.command(name="katalog_aut", description="Wyświetl katalog dostępnych aut")
-async def katalog_aut(interaction: discord.Interaction):
-    embed = discord.Embed(
-        title="📋 Katalog dostępnych aut",
-        description="Wybierz numer auta, aby je kupić komendą `/kup_auto <numer>`",
-        color=discord.Color.blue()
-    )
-
-    for idx, auto in enumerate(KATALOG_AUT, start=1):
-        embed.add_field(
-            name=f"{idx}. {auto['brand']} {auto['model']}",
-            value=f"💰 Cena: {auto['price']} zł",
-            inline=False
-        )
-
-    await interaction.response.send_message(embed=embed, ephemeral=True)
 
 @bot.tree.command(name="kup_auto")
 async def kup_auto(interaction: discord.Interaction, numer: int):
@@ -933,8 +893,8 @@ async def kup_auto(interaction: discord.Interaction, numer: int):
         await interaction.response.send_message("❌ Nie masz wystarczająco pieniędzy!", ephemeral=True)
         return
 
+    # Odejmij kasę i dodaj auto JEDEN RAZ
     dane["gracze"][user_id]["pieniadze"] = pieniadze - cena
-
     dane["salony"][user_id]["auta"].append(auto)
     dane["salony"][user_id]["wartosc"] += cena
 
@@ -946,19 +906,22 @@ async def kup_auto(interaction: discord.Interaction, numer: int):
     )
 
 
+@bot.tree.command(name="katalog_aut", description="Wyświetl katalog dostępnych aut")
+async def katalog_aut(interaction: discord.Interaction):
+    embed = discord.Embed(
+        title="📋 Katalog dostępnych aut",
+        description="Wybierz numer auta, aby je kupić komendą `/kup_auto <numer>`",
+        color=discord.Color.blue()
+    )
 
-    # Odejmujemy kasę
-    pieniadze = dane["gracze"][user_id].get("pieniadze", 0)
-    dane["gracze"][user_id]["pieniadze"] = pieniadze - cena
+    for idx, auto in enumerate(KATALOG_AUT, start=1):
+        embed.add_field(
+            name=f"{idx}. {auto['brand']} {auto['model']}",
+            value=f"💰 Cena: {auto['price']} zł",
+            inline=False
+        )
 
-    # Dodajemy auto do salonu (lista aut w salonie)
-    dane["salony"].setdefault(user_id, {"auta": [], "wartosc": 0, "nazwa": "Twój salon"})
-    dane["salony"][user_id]["auta"].append(auto)
-    dane["salony"][user_id]["wartosc"] += cena
-
-    zapisz_dane(dane)
-
-    await interaction.response.send_message(f"✅ Kupiłeś {auto['brand']} {auto['model']} za {cena} zł i dodano do salonu.", ephemeral=True)
+    await interaction.response.send_message(embed=embed, ephemeral=True)
 
 
 @bot.event
