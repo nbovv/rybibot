@@ -11,6 +11,7 @@ logging.basicConfig(level=logging.INFO)
 from discord import ui
 import random
 from discord import Interaction
+import Embed
 
 DATA_FILE = "/var/data/dealer_data.json"
 
