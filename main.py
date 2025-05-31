@@ -1290,10 +1290,10 @@ async def kupauto(interaction: Interaction, numer: int):
     dane = wczytaj_dane()
     user_id = str(interaction.user.id)
 
-    gracz = dane["gracze"].setdefault(user_id, {
-        "pieniadze": 0,
-        "auto_prywatne": None
-    })
+    # Zapewniamy kompletne dane gracza
+    gracz = dane["gracze"].setdefault(user_id, {})
+    gracz.setdefault("pieniadze", 0)
+    gracz.setdefault("auto_prywatne", None)
 
     if gracz["auto_prywatne"] is not None:
         await interaction.response.send_message(
