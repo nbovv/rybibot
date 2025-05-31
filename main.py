@@ -1647,7 +1647,11 @@ async def zaakceptuj_wyscig(interaction: Interaction):
 
     zapisz_dane(dane)
 
-    await msg.edit_original_response(embed=Embed(title="🏁 Wyścig zakończony!", description=f"Zwycięzca: {winner_name}\nWygrywa {suma} zł!", color=Color.green()))
+    await msg.edit(embed=Embed(
+        title="🏁 Wyścig zakończony!",
+        description=f"Zwycięzca: {winner_name}\nWygrywa {suma} zł!",
+        color=Color.green()
+    ))
 
 @bot.tree.command(name="obstaw", description="Obstaw kto wygra wyścig")
 @app_commands.describe(kto="ID gracza którego obstawiasz", kwota="Kwota zakładu")
