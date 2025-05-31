@@ -9,6 +9,7 @@ import logging
 import asyncio
 logging.basicConfig(level=logging.INFO)
 from discord import ui
+import random
 
 DATA_FILE = "/var/data/dealer_data.json"
 
@@ -968,22 +969,89 @@ async def kup_auto(interaction: discord.Interaction, numer: int):
     await interaction.response.send_message(embed=embed, ephemeral=True)
 
 
-@bot.tree.command(name="katalog_aut", description="Wyświetl katalog dostępnych aut")
-async def katalog_aut(interaction: discord.Interaction):
-    embed = discord.Embed(
-        title="📋 Katalog dostępnych aut",
-        description="Wybierz numer auta, aby je kupić komendą `/kup_auto <numer>`",
-        color=discord.Color.blue()
-    )
+def wczytaj_dane():
+    try:
+        with open(DATA_FILE, "r", encoding="utf-8") as f:
+            dane = json.load(f)
+    except FileNotFoundError:
+        dane = {}
 
-    for idx, auto in enumerate(KATALOG_AUT, start=1):
+    if "salony" not in dane:
+        dane["salony"] = {}
+    if "gracze" not in dane:
+        dane["gracze"] = {}
+    if "ceny" not in dane:
+        dane["ceny"] = generuj_ceny_aut()
+    if "ostatnia_aktualizacja" not in dane:
+        dane["ostatnia_aktualizacja"] = ""
+
+    sprawdz_aktualizacje(dane)
+    return dane
+
+def zapisz_dane(dane):
+    with open(DATA_FILE, "w", encoding="utf-8") as f:
+        json.dump(dane, f, indent=4)
+
+def generuj_ceny_aut():
+    return [
+        {
+            "brand": auto["brand"],
+            "model": auto["model"],
+            "price": int(auto["base_price"] * random.uniform(0.85, 1.15))
+        }
+        for auto in BAZOWY_KATALOG
+    ]
+
+def sprawdz_aktualizacje(dane):
+    dzisiaj = datetime.now().strftime("%Y-%m-%d")
+    if dane.get("ostatnia_aktualizacja") != dzisiaj:
+        dane["ostatnia_aktualizacja"] = dzisiaj
+        dane["ceny"] = generuj_ceny_aut()
+
+        # Aktualizuj wartość salonów
+        for salon in dane["salony"].values():
+            salon["wartosc"] = sum(
+                next((a["price"] for a in dane["ceny"] if a["brand"] == auto["brand"] and a["model"] == auto["model"]), 0)
+                for auto in salon["auta"]
+            )
+
+        zapisz_dane(dane)
+
+@bot.tree.command(name="katalog_aut", description="Wyświetl katalog aut")
+async def katalog_aut(interaction: discord.Interaction):
+    dane = wczytaj_dane()
+    embed = discord.Embed(title="📋 Katalog aut (ceny dynamiczne)", color=discord.Color.blue())
+
+    for idx, auto in enumerate(dane["ceny"], start=1):
         embed.add_field(
             name=f"{idx}. {auto['brand']} {auto['model']}",
-            value=f"💰 Cena: {auto['price']} zł",
+            value=f"Cena: {auto['price']} zł",
             inline=False
         )
 
     await interaction.response.send_message(embed=embed, ephemeral=True)
+
+@bot.tree.command(name="salon", description="Zobacz swój salon")
+async def salon(interaction: discord.Interaction):
+    dane = wczytaj_dane()
+    user_id = str(interaction.user.id)
+
+    if user_id not in dane["salony"]:
+        await interaction.response.send_message(embed=discord.Embed(description="❌ Nie masz jeszcze salonu.", color=discord.Color.red()), ephemeral=True)
+        return
+
+    salon = dane["salony"][user_id]
+    embed = discord.Embed(title=f"🏢 {salon['nazwa']}", color=discord.Color.green())
+    embed.add_field(name="💰 Wartość salonu", value=f"{salon['wartosc']} zł", inline=False)
+    auta = salon["auta"]
+    if auta:
+        for auto in auta:
+            embed.add_field(name=f"{auto['brand']} {auto['model']}", value=f"Szacowana wartość: {auto['price']} zł", inline=False)
+    else:
+        embed.add_field(name="Brak aut", value="Kup coś w katalogu!", inline=False)
+
+    await interaction.response.send_message(embed=embed, ephemeral=True)
+
 
 @tree.command(name="balans", description="Sprawdź ile masz pieniędzy.")
 async def balans(interaction: discord.Interaction):
@@ -1000,41 +1068,6 @@ async def balans(interaction: discord.Interaction):
     await interaction.response.send_message(
         f"💰 Masz {pieniadze} pieniędzy.", ephemeral=True
     )
-
-@bot.tree.command(name="salon", description="Wyświetl swój salon samochodowy")
-async def salon(interaction: discord.Interaction):
-    user_id = str(interaction.user.id)
-    dane = wczytaj_dane()
-
-    if user_id not in dane["salony"] or user_id not in dane["gracze"]:
-        await interaction.response.send_message(
-            embed=discord.Embed(
-                title="❌ Błąd",
-                description="Nie masz jeszcze salonu. Użyj `/stworz`, aby go założyć.",
-                color=discord.Color.red()
-            ),
-            ephemeral=True
-        )
-        return
-
-    salon = dane["salony"][user_id]
-    gracz = dane["gracze"][user_id]
-
-    auta = salon["auta"]
-    if auta:
-        auta_lista = "\n".join([f"{i+1}. {a['brand']} {a['model']}" for i, a in enumerate(auta)])
-    else:
-        auta_lista = "Brak aut w salonie."
-
-    embed = discord.Embed(
-        title=f"🚗 {salon['nazwa']}",
-        color=discord.Color.blue()
-    )
-    embed.add_field(name="💰 Saldo", value=f"{gracz['pieniadze']} zł", inline=False)
-    embed.add_field(name="📦 Wartość salonu", value=f"{salon['wartosc']} zł", inline=False)
-    embed.add_field(name="🚘 Auta", value=auta_lista, inline=False)
-
-    await interaction.response.send_message(embed=embed, ephemeral=True)
 
 
 @bot.event
