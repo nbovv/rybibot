@@ -1,13 +1,13 @@
 [
-  { "brand": "BMW", "model": "M3 E92", "base_price": 65000 },
-  { "brand": "Nissan", "model": "Skyline R34", "base_price": 70000 },
-  { "brand": "Toyota", "model": "Supra MK4", "base_price": 72000 },
-  { "brand": "Audi", "model": "RS6 Avant", "base_price": 80000 },
-  { "brand": "Mercedes", "model": "AMG GT", "base_price": 120000 },
-  { "brand": "Porsche", "model": "911 Turbo", "base_price": 150000 },
-  { "brand": "Honda", "model": "Civic Type R", "base_price": 45000 },
-  { "brand": "Mazda", "model": "RX-7", "base_price": 67000 },
-  { "brand": "Subaru", "model": "Impreza WRX", "base_price": 60000 },
-  { "brand": "Lamborghini", "model": "Huracan", "base_price": 250000 },
-  { "brand": "Ferrari", "model": "488 GTB", "base_price": 280000 }
+  { "brand": "BMW", "model": "M3 E92", "moc_bazowa": 420, "base_price": 65000 },
+  { "brand": "Nissan", "model": "Skyline R34", "moc_bazowa": 330, "base_price": 70000 },
+  { "brand": "Toyota", "model": "Supra MK4", "moc_bazowa": 320, "base_price": 72000 },
+  { "brand": "Audi", "model": "RS6 Avant", "moc_bazowa": 560, "base_price": 80000 },
+  { "brand": "Mercedes", "model": "AMG GT", "moc_bazowa": 476, "base_price": 120000 },
+  { "brand": "Porsche", "model": "911 Turbo", "moc_bazowa": 580, "base_price": 150000 },
+  { "brand": "Honda", "model": "Civic Type R", "moc_bazowa": 320, "base_price": 45000 },
+  { "brand": "Mazda", "model": "RX-7", "moc_bazowa": 255, "base_price": 67000 },
+  { "brand": "Subaru", "model": "Impreza WRX", "moc_bazowa": 280, "base_price": 60000 },
+  { "brand": "Lamborghini", "model": "Huracan", "moc_bazowa": 610, "base_price": 250000 },
+  { "brand": "Ferrari", "model": "488 GTB", "moc_bazowa": 670, "base_price": 280000 }
 ]
