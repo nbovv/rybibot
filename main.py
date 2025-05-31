@@ -1121,15 +1121,15 @@ async def katalog_aut(interaction: discord.Interaction):
     embed = discord.Embed(title="📋 Katalog aut (ceny dynamiczne)", color=discord.Color.blue())
 
     for idx, auto in enumerate(dane["ceny"], start=1):
-    # Szukamy mocy z katalogu
-    katalog_auto = next((a for a in KATALOG_AUT if a["brand"] == auto["brand"] and a["model"] == auto["model"]), None)
-    moc = katalog_auto["moc_bazowa"] if katalog_auto else "Brak danych"
+        # Szukamy mocy z katalogu
+        katalog_auto = next((a for a in KATALOG_AUT if a["brand"] == auto["brand"] and a["model"] == auto["model"]), None)
+        moc = katalog_auto["moc_bazowa"] if katalog_auto else "Brak danych"
 
-    embed.add_field(
-        name=f"{idx}. {auto['brand']} {auto['model']}",
-        value=f"💰 Cena: {auto['price']} zł\n🏁 Moc: {moc} KM",
-        inline=False
-    )
+        embed.add_field(
+            name=f"{idx}. {auto['brand']} {auto['model']}",
+            value=f"💰 Cena: {auto['price']} zł\n🏁 Moc: {moc} KM",
+            inline=False
+        )
 
     await interaction.response.send_message(embed=embed, ephemeral=True)
 
