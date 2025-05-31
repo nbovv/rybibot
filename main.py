@@ -1018,32 +1018,6 @@ def sprawdz_aktualizacje(dane):
         zapisz_dane(dane)
 
 
-@bot.tree.command(name="salon", description="Zobacz swój salon")
-async def salon(interaction: discord.Interaction):
-    dane = wczytaj_dane()
-    user_id = str(interaction.user.id)
-
-    if user_id not in dane["salony"]:
-        await interaction.response.send_message(embed=discord.Embed(description="❌ Nie masz jeszcze salonu.", color=discord.Color.red()), ephemeral=True)
-        return
-
-    salon = dane["salony"][user_id]
-    embed = discord.Embed(title=f"🏢 {salon['nazwa']}", color=discord.Color.green())
-    embed.add_field(name="💰 Wartość salonu", value=f"{salon['wartosc']} zł", inline=False)
-    auta = salon["auta"]
-    if auta:
-        for auto in auta:
-            embed.add_field(name=f"{auto['brand']} {auto['model']}", value=f"Szacowana wartość: {auto['price']} zł", inline=False)
-    else:
-        embed.add_field(name="Brak aut", value="Kup coś w katalogu!", inline=False)
-
-    await interaction.response.send_message(embed=embed, ephemeral=True)
-
-
-@tree.command(name="balans", description="Sprawdź ile masz pieniędzy.")
-async def balans(interaction: discord.Interaction):
-    user_id = str(interaction.user.id)
-    dane = wczytaj_dane()
 
     # Upewnij się, że gracz istnieje w danych
     if user_id not in dane["gracze"]:
