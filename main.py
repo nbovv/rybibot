@@ -1283,6 +1283,97 @@ async def balans(interaction: discord.Interaction):
         f"💰 Masz {pieniadze} pieniędzy.", ephemeral=True
     )
 
+@bot.tree.command(name="kupauto", description="Kup prywatne auto z katalogu")
+@app_commands.describe(numer="Numer auta z katalogu do kupienia")
+async def kupauto(interaction: Interaction, numer: int):
+    dane = wczytaj_dane()
+    user_id = str(interaction.user.id)
+
+    katalog = dane.get("ceny", [])
+    if numer < 1 or numer > len(katalog):
+        await interaction.response.send_message(embed=Embed(description="❌ Niepoprawny numer auta z katalogu.", color=Color.red()), ephemeral=True)
+        return
+
+    auto_do_kupienia = katalog[numer - 1]
+    gracz = dane["gracze"].get(user_id, {"pieniadze": 0, "auto_prywatne": None})
+
+    if gracz["auto_prywatne"] is not None:
+        await interaction.response.send_message(embed=Embed(description="❌ Masz już prywatne auto. Sprzedaj je przed zakupem nowego.", color=Color.red()), ephemeral=True)
+        return
+
+    cena = auto_do_kupienia["price"]
+    if gracz["pieniadze"] < cena:
+        await interaction.response.send_message(embed=Embed(description=f"❌ Nie masz wystarczająco pieniędzy. Potrzebujesz {cena} zł.", color=Color.red()), ephemeral=True)
+        return
+
+    # Kup auto
+    gracz["pieniadze"] -= cena
+    gracz["auto_prywatne"] = {
+        "brand": auto_do_kupienia["brand"],
+        "model": auto_do_kupienia["model"],
+        "base_price": cena,
+        "tuning": {  # puste tuning na start
+            "silnik": 0,
+            "turbo": 0,
+            "nitro": 0,
+            "opony": 0,
+            "zawieszenie": 0,
+            "aerodynamika": 0
+        }
+    }
+
+    dane["gracze"][user_id] = gracz
+    zapisz_dane(dane)
+
+    await interaction.response.send_message(embed=Embed(description=f"✅ Kupiłeś prywatne auto **{auto_do_kupienia['brand']} {auto_do_kupienia['model']}** za {cena} zł.", color=Color.green()), ephemeral=True)
+
+
+@bot.tree.command(name="mojeauto", description="Pokaż swoje prywatne auto")
+async def mojeauto(interaction: Interaction):
+    dane = wczytaj_dane()
+    user_id = str(interaction.user.id)
+
+    gracz = dane["gracze"].get(user_id)
+    if not gracz or not gracz.get("auto_prywatne"):
+        await interaction.response.send_message(embed=Embed(description="❌ Nie masz prywatnego auta.", color=Color.red()), ephemeral=True)
+        return
+
+    auto = gracz["auto_prywatne"]
+
+    embed = Embed(title="🚗 Twoje prywatne auto", color=Color.blue())
+    embed.add_field(name="Marka", value=auto["brand"], inline=True)
+    embed.add_field(name="Model", value=auto["model"], inline=True)
+    embed.add_field(name="Cena bazowa", value=f"{auto['base_price']} zł", inline=True)
+
+    # Możemy dodać tuning, póki co tylko pokazujemy poziomy
+    tuning = auto.get("tuning", {})
+    tuning_info = "\n".join(f"{part.capitalize()}: {level}" for part, level in tuning.items())
+    embed.add_field(name="Tuning", value=tuning_info or "Brak tuningu", inline=False)
+
+    await interaction.response.send_message(embed=embed, ephemeral=True)
+
+
+@bot.tree.command(name="sprzedajauto", description="Sprzedaj swoje prywatne auto")
+async def sprzedajauto(interaction: Interaction):
+    dane = wczytaj_dane()
+    user_id = str(interaction.user.id)
+
+    gracz = dane["gracze"].get(user_id)
+    if not gracz or not gracz.get("auto_prywatne"):
+        await interaction.response.send_message(embed=Embed(description="❌ Nie masz prywatnego auta do sprzedaży.", color=Color.red()), ephemeral=True)
+        return
+
+    auto = gracz["auto_prywatne"]
+    cena_sprzedazy = auto["base_price"]
+    # Można dodać wycenę uwzględniającą tuning — póki co bazowa cena
+
+    gracz["pieniadze"] += cena_sprzedazy
+    gracz["auto_prywatne"] = None
+
+    dane["gracze"][user_id] = gracz
+    zapisz_dane(dane)
+
+    await interaction.response.send_message(embed=Embed(description=f"✅ Sprzedałeś swoje prywatne auto za {cena_sprzedazy} zł.", color=Color.green()), ephemeral=True)
 
 @bot.event
 async def on_message(message):
