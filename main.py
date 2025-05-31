@@ -8,6 +8,7 @@ from dotenv import load_dotenv
 import logging
 import asyncio
 logging.basicConfig(level=logging.INFO)
+from discord import ui
 
 DATA_FILE = "/var/data/dealer_data.json"
 
