@@ -1559,10 +1559,11 @@ COMMENTARY_MESSAGES = [
 @app_commands.describe(uzytkownik="Użytkownik do wyzwania", wpisowe="Kwota wpisowego")
 async def wyscig(interaction: Interaction, uzytkownik: discord.User, wpisowe: int):
     if uzytkownik.id == interaction.user.id:
-        if wpisowe < 0:
-            await interaction.response.send_message("❌ Wpisowe nie może być ujemne.", ephemeral=True)
-            return
         await interaction.response.send_message("❌ Nie możesz wyzwać samego siebie.", ephemeral=True)
+        return
+
+    if wpisowe < 0:
+        await interaction.response.send_message("❌ Wpisowe nie może być ujemne.", ephemeral=True)
         return
 
     dane = wczytaj_dane()
