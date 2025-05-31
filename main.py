@@ -828,7 +828,7 @@ async def stworz(interaction: discord.Interaction):
 
     embed = discord.Embed(
         title="✅ Sukces!",
-        description="Twój salon został stworzony z budżetem 10 000 zł.",
+        description="Twój salon został stworzony z budżetem 100 000 zł.",
         color=discord.Color.green()
     )
     await interaction.response.send_message(embed=embed, ephemeral=True)
