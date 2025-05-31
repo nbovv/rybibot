@@ -816,7 +816,7 @@ async def stworz(interaction: discord.Interaction):
     }
 
     dane["gracze"][user_id] = {
-        "pieniadze": 10000
+        "pieniadze": 100000
     }
 
     zapisz_dane(dane)
@@ -923,6 +923,21 @@ async def katalog_aut(interaction: discord.Interaction):
 
     await interaction.response.send_message(embed=embed, ephemeral=True)
 
+@tree.command(name="balans", description="Sprawdź ile masz pieniędzy.")
+async def balans(interaction: discord.Interaction):
+    user_id = str(interaction.user.id)
+    dane = wczytaj_dane()
+
+    # Upewnij się, że gracz istnieje w danych
+    if user_id not in dane["gracze"]:
+        dane["gracze"][user_id] = {"pieniadze": 0}
+        zapisz_dane(dane)
+
+    pieniadze = dane["gracze"][user_id].get("pieniadze", 0)
+
+    await interaction.response.send_message(
+        f"💰 Masz {pieniadze} pieniędzy.", ephemeral=True
+    )
 
 @bot.event
 async def on_message(message):
