@@ -821,7 +821,7 @@ async def stworz(interaction: discord.Interaction):
     }
 
     dane["gracze"][user_id] = {
-        "pieniadze": 10000
+        "pieniadze": 100000
     }
 
     zapisz_dane(dane)
