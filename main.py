@@ -1229,8 +1229,11 @@ class PotwierdzenieSprzedazy(ui.View):
             return
 
         salon["auta"].remove(self.auto)
-        salon["wartosc"] -= next((a["price"] for a in self.dane["ceny"]
-                                  if a["brand"] == self.auto["brand"] and a["model"] == self.auto["model"]), 0)
+
+        wartosc_auta = next((a["price"] for a in self.dane["ceny"]
+                             if a["brand"] == self.auto["brand"] and a["model"] == self.auto["model"]), 0)
+        salon["wartosc"] = max(salon["wartosc"] - wartosc_auta, 0)  # Nie pozwól zejść poniżej 0
+
         gracz["pieniadze"] += self.cena
         zapisz_dane(self.dane)
 
