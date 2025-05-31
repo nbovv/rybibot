@@ -1445,7 +1445,7 @@ TUNING_VALUE_INCREASE_PERCENT = {
     "aero": 1
 }
 
-@bot.tree.command(name="tunuj", description="Kup tuning dla swojego auta")
+@bot.tree.command(name="tuning", description="Kup tuning dla swojego auta")
 @app_commands.describe(czesc="Część do tuningu: silnik, turbo, nitro, opony, zawieszenie, aero")
 async def tunuj(interaction: discord.Interaction, czesc: str):
     czesc = czesc.lower()
