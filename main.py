@@ -1082,7 +1082,7 @@ def generuj_ceny_aut():
             "model": auto["model"],
             "price": int(auto["base_price"] * random.uniform(0.85, 1.15))
         }
-        for auto in BAZOWY_KATALOG
+        for auto in KATALOG_AUT
     ]
 
 def sprawdz_aktualizacje(dane):
