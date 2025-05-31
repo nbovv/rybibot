@@ -1412,6 +1412,98 @@ async def sprzedajauto(interaction: Interaction):
 
     await interaction.response.send_message(embed=Embed(description=f"✅ Sprzedałeś swoje prywatne auto za {cena_sprzedazy} zł.", color=Color.green()), ephemeral=True)
 
+# Bazowy koszt 1 poziomu danej części tuningu
+TUNING_BASE_COSTS = {
+    "silnik": 5000,
+    "turbo": 7000,
+    "nitro": 4000,
+    "opony": 3000,
+    "zawieszenie": 3500,
+    "aero": 2000
+}
+
+# Ile KM dodaje każdy poziom danej części
+TUNING_POWER_INCREASE = {
+    "silnik": 30,
+    "turbo": 40,
+    "nitro": 20,
+    "opony": 5,
+    "zawieszenie": 10,
+    "aero": 5
+}
+
+# O ile procent wzrasta wartość auta za każdy poziom danej części
+TUNING_VALUE_INCREASE_PERCENT = {
+    "silnik": 5,        # 5% za poziom
+    "turbo": 6,
+    "nitro": 3,
+    "opony": 1,
+    "zawieszenie": 2,
+    "aero": 1
+}
+
+@bot.tree.command(name="tunuj", description="Kup tuning dla swojego auta")
+@app_commands.describe(czesc="Część do tuningu: silnik, turbo, nitro, opony, zawieszenie, aero")
+async def tunuj(interaction: discord.Interaction, czesc: str):
+    czesc = czesc.lower()
+    if czesc not in TUNING_BASE_COSTS:
+        await interaction.response.send_message(f"❌ Nieznana część tuningu: {czesc}", ephemeral=True)
+        return
+
+    dane = wczytaj_dane()
+    user_id = str(interaction.user.id)
+    gracz = dane["gracze"].get(user_id)
+
+    if not gracz or "auto_prywatne" not in gracz:
+        await interaction.response.send_message("❌ Nie posiadasz prywatnego auta do tuningu.", ephemeral=True)
+        return
+
+    auto = gracz["auto_prywatne"]
+    tuning = auto.get("tuning", {
+        "silnik": 0,
+        "turbo": 0,
+        "nitro": 0,
+        "opony": 0,
+        "zawieszenie": 0,
+        "aero": 0
+    })
+
+    obecny_poziom = tuning.get(czesc, 0)
+    nowy_poziom = obecny_poziom + 1
+
+    # Koszt rośnie liniowo wraz z poziomem, np: base_cost * nowy_poziom
+    koszt = TUNING_BASE_COSTS[czesc] * nowy_poziom
+
+    if gracz["pieniadze"] < koszt:
+        await interaction.response.send_message(
+            f"❌ Nie masz wystarczająco pieniędzy na zakup poziomu {nowy_poziom} części '{czesc}'. "
+            f"Koszt: {koszt} zł.",
+            ephemeral=True
+        )
+        return
+
+    # Zwiększamy poziom części
+    tuning[czesc] = nowy_poziom
+    auto["tuning"] = tuning
+
+    # Odejmujemy kasę
+    gracz["pieniadze"] -= koszt
+
+    # Zwiększamy wartość auta o procent zależny od poziomu i części
+    procent_zwiekszenia = TUNING_VALUE_INCREASE_PERCENT[czesc] * nowy_poziom
+    wartosc_bazowa = auto.get("price", 0)
+    wartosc_nowa = int(wartosc_bazowa * (1 + procent_zwiekszenia / 100))
+    auto["price"] = wartosc_nowa
+
+    zapisz_dane(dane)
+
+    await interaction.response.send_message(
+        f"✅ Udało się kupić tuning '{czesc}' poziom {nowy_poziom}! Koszt: {koszt} zł.\n"
+        f"Wartość auta wzrosła do {wartosc_nowa} zł.\n"
+        f"Pozostało Ci {gracz['pieniadze']} zł.",
+        ephemeral=True
+    )
+
 @bot.event
 async def on_message(message):
         if message.author.bot:
