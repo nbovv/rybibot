@@ -940,7 +940,7 @@ async def kup_auto(interaction: discord.Interaction, numer: int):
         return
 
     auto = KATALOG_AUT[numer - 1]
-    cena = auto["base_price"]
+    cena = next((a["price"] for a in dane["ceny"] if a["brand"] == auto["brand"] and a["model"] == auto["model"]), None)
     pieniadze = dane["gracze"][user_id]["pieniadze"]
 
     if pieniadze < cena:
