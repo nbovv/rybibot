@@ -10,6 +10,7 @@ import asyncio
 logging.basicConfig(level=logging.INFO)
 from discord import ui
 import random
+from discord import Interaction
 
 DATA_FILE = "/var/data/dealer_data.json"
 
