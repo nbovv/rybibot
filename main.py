@@ -1481,17 +1481,26 @@ async def tunuj(interaction: discord.Interaction, czesc: str):
     })
 
     obecny_poziom = tuning.get(czesc, 0)
+
+    if obecny_poziom >= 5:
+        embed = discord.Embed(
+            title="❌ Maksymalny poziom",
+            description=f"Część **{czesc}** ma już maksymalny poziom (5).",
+            color=discord.Color.red()
+        )
+        await interaction.response.send_message(embed=embed, ephemeral=True)
+        return
+
     nowy_poziom = obecny_poziom + 1
 
-    koszt = TUNING_BASE_COSTS[czesc] * nowy_poziom
+    # Rosnący koszt bazujący na obecnym poziomie i typie części
+    bazowy_koszt = TUNING_BASE_COSTS[czesc]
+    koszt = int(bazowy_koszt * (1.8 ** obecny_poziom))
 
     if gracz["pieniadze"] < koszt:
         embed = discord.Embed(
             title="❌ Za mało pieniędzy",
-            description=(
-                f"Nie masz wystarczająco pieniędzy na zakup poziomu {nowy_poziom} części **{czesc}**.\n"
-                f"Koszt: **{koszt} zł**."
-            ),
+            description=(f"Nie masz wystarczająco pieniędzy na zakup poziomu {nowy_poziom} części **{czesc}**.\nKoszt: **{koszt} zł**."),
             color=discord.Color.red()
         )
         await interaction.response.send_message(embed=embed, ephemeral=True)
