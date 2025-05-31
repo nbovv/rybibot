@@ -1019,17 +1019,7 @@ def sprawdz_aktualizacje(dane):
 
 
 
-    # Upewnij się, że gracz istnieje w danych
-    if user_id not in dane["gracze"]:
-        dane["gracze"][user_id] = {"pieniadze": 0}
-        zapisz_dane(dane)
-
-    pieniadze = dane["gracze"][user_id].get("pieniadze", 0)
-
-        await interaction.response.send_message(
-            f"💰 Masz {pieniadze} pieniędzy.", ephemeral=True
-        )
-
+    
 
 @bot.tree.command(name="ranking", description="Zobacz ranking najlepszych salonów")
 async def ranking(interaction: discord.Interaction):
