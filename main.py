@@ -1129,7 +1129,7 @@ async def salon(interaction: discord.Interaction):
     auta = salon["auta"]
     if auta:
         for auto in auta:
-            embed.add_field(name=f"{auto['brand']} {auto['model']}", value=f"Szacowana wartość: {auto['price']} zł", inline=False)
+            embed.add_field(name=f"{auto['brand']} {auto['model']}", value=f"Szacowana wartość: {auto['base_price']} zł", inline=False)
     else:
         embed.add_field(name="Brak aut", value="Kup coś w katalogu!", inline=False)
 
