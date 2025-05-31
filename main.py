@@ -1182,12 +1182,12 @@ async def sprzedaj_auto(interaction: discord.Interaction, numer: int):
         )
         return
 
-    cena_katalogowa = dane_ceny["base_price"]
+    cena_katalogowa = dane_ceny["price"]
 
     if klient_premium:
         # Premium klient - lepsza oferta i wyższe prawdopodobieństwo zaakceptowania
         cena_oferta = int(random.uniform(1.05, 1.3) * cena_katalogowa)
-        cena_oferta = max(cena_oferta, auto["_price"])
+        cena_oferta = max(cena_oferta, auto["base_price"])
         opis_klienta = "✨ Klient premium"
         kolor_embed = discord.Color.gold()
     else:
