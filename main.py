@@ -1361,16 +1361,18 @@ async def mojeauto(interaction: Interaction):
 
     auto = gracz["auto_prywatne"]
 
+    # Szukamy danych auta w katalogu, by pobrać moc bazową
+    katalog_auto = next(
+        (a for a in KATALOG_AUT if a["brand"] == auto["brand"] and a["model"] == auto["model"]),
+        None
+    )
+    moc_bazowa = katalog_auto["moc_bazowa"] if katalog_auto else "Brak danych"
+
     embed = Embed(title="🚗 Twoje prywatne auto", color=Color.blue())
     embed.add_field(name="Marka", value=auto["brand"], inline=True)
     embed.add_field(name="Model", value=auto["model"], inline=True)
     embed.add_field(name="Cena bazowa", value=f"{auto['price']} zł", inline=True)
-    embed.add_field(name="moc bazowa", value=f"{auto['moc_bazowa']} KM", inline=True)
-
-    # Możemy dodać tuning, póki co tylko pokazujemy poziomy
-    tuning = auto.get("tuning", {})
-    tuning_info = "\n".join(f"{part.capitalize()}: {level}" for part, level in tuning.items())
-    embed.add_field(name="Tuning", value=tuning_info or "Brak tuningu", inline=False)
+    embed.add_field(name="Moc bazowa", value=f"{moc_bazowa} KM", inline=True)
 
     await interaction.response.send_message(embed=embed, ephemeral=True)
 
