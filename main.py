@@ -1381,7 +1381,7 @@ async def sprzedajauto(interaction: Interaction):
         return
 
     auto = gracz["auto_prywatne"]
-    cena_sprzedazy = auto["base_price"]
+    cena_sprzedazy = auto["price"]
     # Można dodać wycenę uwzględniającą tuning — póki co bazowa cena
 
     gracz["pieniadze"] += cena_sprzedazy
