@@ -1361,6 +1361,7 @@ async def mojeauto(interaction: Interaction):
     embed.add_field(name="Marka", value=auto["brand"], inline=True)
     embed.add_field(name="Model", value=auto["model"], inline=True)
     embed.add_field(name="Cena bazowa", value=f"{auto['price']} zł", inline=True)
+    embed.add_field(name="moc bazowa", value=f"{auto['moc_bazowa']} KM", inline=True)
 
     # Możemy dodać tuning, póki co tylko pokazujemy poziomy
     tuning = auto.get("tuning", {})
