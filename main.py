@@ -1349,30 +1349,43 @@ async def kupauto(interaction: Interaction, numer: int):
     )
 
 
-@bot.tree.command(name="mojeauto", description="Pokaż swoje prywatne auto")
-async def mojeauto(interaction: Interaction):
+@bot.tree.command(name="mojeauto", description="Pokaż swoje prywatne auto z tuningiem")
+async def mojeauto(interaction: discord.Interaction):
     dane = wczytaj_dane()
     user_id = str(interaction.user.id)
 
     gracz = dane["gracze"].get(user_id)
-    if not gracz or not gracz.get("auto_prywatne"):
-        await interaction.response.send_message(embed=Embed(description="❌ Nie masz prywatnego auta.", color=Color.red()), ephemeral=True)
+    if not gracz or "auto_prywatne" not in gracz:
+        await interaction.response.send_message("❌ Nie masz prywatnego auta.", ephemeral=True)
         return
 
     auto = gracz["auto_prywatne"]
 
-    # Szukamy danych auta w katalogu, by pobrać moc bazową
-    katalog_auto = next(
-        (a for a in KATALOG_AUT if a["brand"] == auto["brand"] and a["model"] == auto["model"]),
-        None
-    )
-    moc_bazowa = katalog_auto["moc_bazowa"] if katalog_auto else "Brak danych"
+    katalog_auto = next((a for a in KATALOG_AUT if a["brand"] == auto["brand"] and a["model"] == auto["model"]), None)
+    if not katalog_auto:
+        await interaction.response.send_message("❌ Nie znaleziono auta w katalogu.", ephemeral=True)
+        return
 
-    embed = Embed(title="🚗 Twoje prywatne auto", color=Color.blue())
+    moc_bazowa = katalog_auto.get("moc_bazowa", 0)
+    tuning = auto.get("tuning", {})
+
+    moc_dodatkowa = 0
+    for czesc, poziom in tuning.items():
+        moc_dodatkowa += TUNING_POWER_INCREASE.get(czesc, 0) * poziom
+
+    moc_calkowita = moc_bazowa + moc_dodatkowa
+
+    embed = discord.Embed(title="🚗 Twoje prywatne auto", color=discord.Color.blue())
     embed.add_field(name="Marka", value=auto["brand"], inline=True)
     embed.add_field(name="Model", value=auto["model"], inline=True)
-    embed.add_field(name="Cena bazowa", value=f"{auto['price']} zł", inline=True)
+    embed.add_field(name="Cena", value=f"{auto.get('price', 0)} zł", inline=True)
     embed.add_field(name="Moc bazowa", value=f"{moc_bazowa} KM", inline=True)
+    embed.add_field(name="Moc z tuningu", value=f"+{moc_dodatkowa} KM", inline=True)
+    embed.add_field(name="Moc całkowita", value=f"{moc_calkowita} KM", inline=True)
+
+    tuning_opis = "\n".join(f"{czesc.capitalize()}: {poziom}" for czesc, poziom in tuning.items() if poziom > 0)
+    if tuning_opis:
+        embed.add_field(name="Poziomy tuningu", value=tuning_opis, inline=False)
 
     await interaction.response.send_message(embed=embed, ephemeral=True)
 
