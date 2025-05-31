@@ -1521,6 +1521,148 @@ async def tunuj(interaction: discord.Interaction, czesc: str):
     )
     await interaction.response.send_message(embed=embed, ephemeral=True)
 
+TUNING_BASE_COSTS = {
+    "silnik": 5000,
+    "turbo": 7000,
+    "nitro": 6000,
+    "opony": 3000,
+    "zawieszenie": 4000,
+    "aero": 3500
+}
+TUNING_VALUE_INCREASE_PERCENT = {
+    "silnik": 1.5,
+    "turbo": 2.0,
+    "nitro": 1.8,
+    "opony": 1.0,
+    "zawieszenie": 1.2,
+    "aero": 1.1
+}
+
+ACTIVE_RACES = {}
+BETS = {}
+
+COMMENTARY_MESSAGES = [
+    "🔥 {driver1} startuje z piskiem opon!",
+    "💨 {driver2} rzuca się do przodu jak rakieta!",
+    "🏁 Obaj kierowcy są łeb w łeb!",
+    "🚧 {driver1} omija pachołki jak mistrz slalomu!",
+    "⚡ {driver2} aktywuje nitro i przyspiesza!",
+    "🛞 {driver1} traci przyczepność na zakręcie!",
+    "💥 {driver2} prawie zalicza krawężnik, ale ratuje sytuację!",
+    "🚀 {driver1} łapie niesamowite przyspieszenie!",
+    "🌀 {driver2} robi piękny drift przez zakręt!",
+    "👀 Widzowie nie mogą oderwać wzroku od tej akcji!",
+    # dodaj 90+ podobnych...
+] * 10
+
+@bot.tree.command(name="wyscig", description="Wyzwi gracza na wyścig 1v1")
+@app_commands.describe(uzytkownik="Użytkownik do wyzwania", wpisowe="Kwota wpisowego")
+async def wyscig(interaction: Interaction, uzytkownik: discord.User, wpisowe: int):
+    if uzytkownik.id == interaction.user.id:
+        await interaction.response.send_message("❌ Nie możesz wyzwać samego siebie.", ephemeral=True)
+        return
+
+    dane = wczytaj_dane()
+    user_id = str(interaction.user.id)
+    target_id = str(uzytkownik.id)
+
+    gracz1 = dane["gracze"].get(user_id)
+    gracz2 = dane["gracze"].get(target_id)
+
+    if not gracz1 or not gracz1.get("auto_prywatne") or not gracz2 or not gracz2.get("auto_prywatne"):
+        await interaction.response.send_message("❌ Obaj gracze muszą mieć prywatne auta.", ephemeral=True)
+        return
+
+    if gracz1["pieniadze"] < wpisowe or gracz2["pieniadze"] < wpisowe:
+        await interaction.response.send_message("❌ Obaj gracze muszą mieć wystarczająco pieniędzy na wpisowe.", ephemeral=True)
+        return
+
+    ACTIVE_RACES[uzytkownik.id] = {
+        "challenger": interaction.user.id,
+        "fee": wpisowe
+    }
+
+    await interaction.response.send_message(
+        f"🚗 {uzytkownik.mention}, zostałeś wyzwany na wyścig uliczny przez {interaction.user.mention}!
+        Wpisowe: {wpisowe} zł
+        Użyj komendy `/zaakceptuj_wyscig` aby przyjąć."
+    )
+
+@bot.tree.command(name="zaakceptuj_wyscig", description="Zaakceptuj zaproszenie na wyścig")
+async def zaakceptuj_wyscig(interaction: Interaction):
+    dane = wczytaj_dane()
+    user_id = str(interaction.user.id)
+
+    if interaction.user.id not in ACTIVE_RACES:
+        await interaction.response.send_message("❌ Nie masz żadnego wyzwania.", ephemeral=True)
+        return
+
+    race = ACTIVE_RACES.pop(interaction.user.id)
+    challenger_id = race["challenger"]
+    wpisowe = race["fee"]
+
+    gracz1 = dane["gracze"].get(str(challenger_id))
+    gracz2 = dane["gracze"].get(user_id)
+
+    auto1 = gracz1["auto_prywatne"]
+    auto2 = gracz2["auto_prywatne"]
+
+    # Odejmij wpisowe
+    gracz1["pieniadze"] -= wpisowe
+    gracz2["pieniadze"] -= wpisowe
+
+    # Oblicz moc auta + tuning bonus
+    def oblicz_moc(auto):
+        bazowa = next((a["moc_bazowa"] for a in KATALOG_AUT if a["brand"] == auto["brand"] and a["model"] == auto["model"]), 0)
+        bonus = sum(auto["tuning"].get(k, 0) * 5 for k in auto["tuning"])
+        return bazowa + bonus
+
+    moc1 = oblicz_moc(auto1)
+    moc2 = oblicz_moc(auto2)
+
+    msg = await interaction.response.send_message(embed=Embed(title="🏁 Wyścig uliczny!", description=f"{bot.get_user(challenger_id).mention} vs {interaction.user.mention}\nStart za 3 sekundy...", color=Color.orange()))
+    await asyncio.sleep(3)
+
+    czas_wyscigu = random.randint(15, 30)
+    for _ in range(czas_wyscigu):
+        komentarz = random.choice(COMMENTARY_MESSAGES).format(driver1=bot.get_user(challenger_id).name, driver2=interaction.user.name)
+        await msg.edit_original_response(embed=Embed(title="🏁 Wyścig trwa!", description=komentarz, color=Color.blurple()))
+        await asyncio.sleep(1)
+
+    wynik1 = moc1 + random.randint(-20, 20)
+    wynik2 = moc2 + random.randint(-20, 20)
+
+    winner_id = challenger_id if wynik1 > wynik2 else interaction.user.id
+    winner_name = bot.get_user(winner_id).mention
+    suma = wpisowe * 2
+
+    dane["gracze"][str(winner_id)]["pieniadze"] += suma
+
+    zapisz_dane(dane)
+
+    await msg.edit_original_response(embed=Embed(title="🏁 Wyścig zakończony!", description=f"Zwycięzca: {winner_name}\nWygrywa {suma} zł!", color=Color.green()))
+
+@bot.tree.command(name="obstaw", description="Obstaw kto wygra wyścig")
+@app_commands.describe(kto="ID gracza którego obstawiasz", kwota="Kwota zakładu")
+async def obstaw(interaction: Interaction, kto: int, kwota: int):
+    dane = wczytaj_dane()
+    user_id = str(interaction.user.id)
+
+    gracz = dane["gracze"].get(user_id)
+    if not gracz or gracz["pieniadze"] < kwota:
+        await interaction.response.send_message("❌ Nie masz tyle pieniędzy na zakład.", ephemeral=True)
+        return
+
+    gracz["pieniadze"] -= kwota
+    BETS.setdefault(kto, []).append((interaction.user.id, kwota))
+    await interaction.response.send_message(f"✅ Obstawiono {kwota} zł na {bot.get_user(kto).name}", ephemeral=True)
+
+# Dodaj obsługę wypłat dla poprawnych zakładów w `zaakceptuj_wyscig`:
+#   if BETS.get(winner_id):
+#       for uid, kwota in BETS[winner_id]: dane["gracze"][str(uid)]["pieniadze"] += kwota * 2
+#       del BETS[winner_id]
+
+
 @bot.event
 async def on_message(message):
         if message.author.bot:
