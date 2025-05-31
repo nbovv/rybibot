@@ -1583,11 +1583,12 @@ async def wyscig(interaction: Interaction, uzytkownik: discord.User, wpisowe: in
     }
 
     await interaction.response.send_message(
-        f"🚗 {uzytkownik.mention}, zostałeś wyzwany na wyścig uliczny przez {interaction.user.mention}!
-        Wpisowe: {wpisowe} zł
-        Użyj komendy `/zaakceptuj_wyscig` aby przyjąć."
+        f"🚗 {uzytkownik.mention}, zostałeś wyzwany na wyścig uliczny przez {interaction.user.mention}!\n"
+        f"Wpisowe: {wpisowe} zł\n"
+        f"Użyj komendy `/zaakceptuj_wyscig`, aby przyjąć.",
+        ephemeral=False
     )
-
+    
 @bot.tree.command(name="zaakceptuj_wyscig", description="Zaakceptuj zaproszenie na wyścig")
 async def zaakceptuj_wyscig(interaction: Interaction):
     dane = wczytaj_dane()
