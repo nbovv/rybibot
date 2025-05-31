@@ -1634,7 +1634,7 @@ async def zaakceptuj_wyscig(interaction: Interaction):
     for _ in range(czas_wyscigu):
         komentarz = random.choice(COMMENTARY_MESSAGES).format(driver1=bot.get_user(challenger_id).name, driver2=interaction.user.name)
         await msg.edit(embed=Embed(title="🏁 Wyścig trwa!", description=komentarz, color=Color.blurple()))
-        await asyncio.sleep(1)
+        await asyncio.sleep(2)
 
     wynik1 = moc1 + random.randint(-20, 20)
     wynik2 = moc2 + random.randint(-20, 20)
@@ -1644,6 +1644,10 @@ async def zaakceptuj_wyscig(interaction: Interaction):
     suma = wpisowe * 2
 
     dane["gracze"][str(winner_id)]["pieniadze"] += suma
+    if BETS.get(winner_id):
+        for uid, kwota in BETS[winner_id]:
+            dane["gracze"][str(uid)]["pieniadze"] += kwota * 2
+        del BETS[winner_id]
 
     zapisz_dane(dane)
 
@@ -1660,7 +1664,7 @@ async def obstaw(interaction: Interaction, kto: int, kwota: int):
     user_id = str(interaction.user.id)
 
     gracz = dane["gracze"].get(user_id)
-    if not gracz or gracz["pieniadze"] < kwota:
+    if not gracz or kwota <= 0 or gracz["pieniadze"] < kwota:
         await interaction.response.send_message("❌ Nie masz tyle pieniędzy na zakład.", ephemeral=True)
         return
 
