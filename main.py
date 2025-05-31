@@ -786,19 +786,14 @@ async def stworz(interaction: discord.Interaction):
     user_id = str(interaction.user.id)
     dane = wczytaj_dane()
 
-    if user_id in dane.get("salony", {}):
+    if user_id in dane["salony"]:
         await interaction.response.send_message("❌ Masz już stworzony salon.", ephemeral=True)
         return
 
-    if "salony" not in dane:
-        dane["salony"] = {}
-
-    if "gracze" not in dane:
-        dane["gracze"] = {}
-
     dane["salony"][user_id] = {
         "nazwa": f"Salon {interaction.user.display_name}",
-        "auta": []
+        "auta": [],
+        "wartosc": 0
     }
 
     dane["gracze"][user_id] = {
@@ -810,23 +805,22 @@ async def stworz(interaction: discord.Interaction):
 
 
 
+
 def wczytaj_dane():
     try:
         with open("dane.json", "r", encoding="utf-8") as f:
-            return json.load(f)
+            dane = json.load(f)
     except FileNotFoundError:
-        return {"salony": {}}
+        dane = {}
 
-
-    # Upewnij się, że oba klucze istnieją
+    # ZAWSZE uzupełniaj brakujące klucze
     if "salony" not in dane:
         dane["salony"] = {}
     if "gracze" not in dane:
         dane["gracze"] = {}
-    if "wartosc" not in dane["salony"][user_id]:
-        dane["salony"][user_id]["wartosc"] = 0
 
     return dane
+
 
 
 def zapisz_dane(dane):
@@ -854,8 +848,7 @@ class PotwierdzenieUsuniecia(ui.View):
             self.dane["salony"].pop(self.user_id, None)
         if "gracze" in self.dane:
             self.dane["gracze"].pop(self.user_id, None)
-        if user_id in dane["salony"]:
-            del dane["salony"][user_id]
+            
 
     # ZAPISZ ZMIANY DO PLIKU
         zapisz_dane(self.dane)
@@ -932,7 +925,7 @@ async def kup_auto(interaction: discord.Interaction, numer: int):
     cena = auto["price"]
 
     # Dodaj cenę auta do wartości salonu
-    dane["salony"][user_id]["wartosc"] += cena
+   # dane["salony"][user_id]["wartosc"] += cena
 
     # Zapisz dane do pliku
     with open("dane.json", "w", encoding="utf-8") as f:
