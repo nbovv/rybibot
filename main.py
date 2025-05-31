@@ -786,6 +786,12 @@ async def stworz(interaction: discord.Interaction):
     user_id = str(interaction.user.id)
     dane = wczytaj_dane()
 
+    # Upewnij się, że dane mają odpowiednie klucze
+    if "salony" not in dane:
+        dane["salony"] = {}
+    if "gracze" not in dane:
+        dane["gracze"] = {}
+
     if user_id in dane["salony"]:
         await interaction.response.send_message("❌ Masz już stworzony salon.", ephemeral=True)
         return
@@ -806,6 +812,7 @@ async def stworz(interaction: discord.Interaction):
 
 
 
+
 def wczytaj_dane():
     try:
         with open("dane.json", "r", encoding="utf-8") as f:
@@ -813,7 +820,6 @@ def wczytaj_dane():
     except FileNotFoundError:
         dane = {}
 
-    # ZAWSZE uzupełniaj brakujące klucze
     if "salony" not in dane:
         dane["salony"] = {}
     if "gracze" not in dane:
@@ -829,6 +835,22 @@ def zapisz_dane(dane):
 
 from discord import ui
 
+
+
+@bot.tree.command(name="usun_salon", description="Usuń swój salon (bezpowrotnie)")
+async def usun_salon(interaction: discord.Interaction):
+    user_id = str(interaction.user.id)
+    dane = wczytaj_dane()
+
+    if user_id not in dane["salony"]:
+        await interaction.response.send_message("❌ Nie masz jeszcze salonu.", ephemeral=True)
+        return
+
+    view = PotwierdzenieUsuniecia(interaction, user_id, dane)
+    await interaction.response.send_message(
+        "⚠️ Na pewno chcesz usunąć swój salon i konto? Tej operacji nie można cofnąć!",
+        view=view, ephemeral=True
+    )
 class PotwierdzenieUsuniecia(ui.View):
     def __init__(self, interaction, user_id, dane):
         super().__init__(timeout=30)
@@ -869,21 +891,6 @@ class PotwierdzenieUsuniecia(ui.View):
         self.odpowiedziano = True
         self.stop()
 
-@bot.tree.command(name="usun_salon", description="Usuń swój salon (bezpowrotnie)")
-async def usun_salon(interaction: discord.Interaction):
-    user_id = str(interaction.user.id)
-    dane = wczytaj_dane()
-
-    if user_id not in dane["salony"]:
-        await interaction.response.send_message("❌ Nie masz jeszcze salonu.", ephemeral=True)
-        return
-
-    view = PotwierdzenieUsuniecia(interaction, user_id, dane)
-    await interaction.response.send_message(
-        "⚠️ Na pewno chcesz usunąć swój salon i konto? Tej operacji nie można cofnąć!",
-        view=view, ephemeral=True
-    )
-
 @bot.tree.command(name="katalog_aut", description="Wyświetl katalog dostępnych aut")
 async def katalog_aut(interaction: discord.Interaction):
     embed = discord.Embed(
@@ -906,36 +913,38 @@ async def kup_auto(interaction: discord.Interaction, numer: int):
     user_id = str(interaction.user.id)
     dane = wczytaj_dane()
 
-    # Sprawdzenie czy użytkownik ma już salon
-    if "salony" not in dane:
-        dane["salony"] = {}
-
     if user_id not in dane["salony"]:
-        dane["salony"][user_id] = {}
+        await interaction.response.send_message("❌ Nie masz jeszcze salonu.", ephemeral=True)
+        return
 
-    if "wartosc" not in dane["salony"][user_id]:
-        dane["salony"][user_id]["wartosc"] = 0
+    if user_id not in dane["gracze"]:
+        await interaction.response.send_message("❌ Nie masz konta gracza.", ephemeral=True)
+        return
 
-    # Sprawdź czy numer jest poprawny względem listy aut
     if numer < 1 or numer > len(KATALOG_AUT):
         await interaction.response.send_message("Niepoprawny numer auta!", ephemeral=True)
         return
 
-    auto = KATALOG_AUT[numer - 1]  # numeracja od 1, lista od 0
+    auto = KATALOG_AUT[numer - 1]
     cena = auto["price"]
 
-    # Dodaj cenę auta do wartości salonu
-   # dane["salony"][user_id]["wartosc"] += cena
+    pieniadze = dane["gracze"][user_id].get("pieniadze", 0)
+    if pieniadze < cena:
+        await interaction.response.send_message("❌ Nie masz wystarczająco pieniędzy!", ephemeral=True)
+        return
 
-    # Zapisz dane do pliku
-    with open("dane.json", "w", encoding="utf-8") as f:
-        json.dump(dane, f, indent=4)
+    dane["gracze"][user_id]["pieniadze"] = pieniadze - cena
 
-    # Potwierdzenie zakupu
+    dane["salony"][user_id]["auta"].append(auto)
+    dane["salony"][user_id]["wartosc"] += cena
+
+    zapisz_dane(dane)
+
     await interaction.response.send_message(
-        f"Kupiłeś samochód: {auto['brand']} {auto['model']} za {cena} zł!",
+        f"✅ Kupiłeś {auto['brand']} {auto['model']} za {cena} zł i dodano do salonu.",
         ephemeral=True
     )
+
 
 
     # Odejmujemy kasę
