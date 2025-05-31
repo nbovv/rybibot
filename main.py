@@ -1360,7 +1360,7 @@ async def mojeauto(interaction: Interaction):
     embed = Embed(title="🚗 Twoje prywatne auto", color=Color.blue())
     embed.add_field(name="Marka", value=auto["brand"], inline=True)
     embed.add_field(name="Model", value=auto["model"], inline=True)
-    embed.add_field(name="Cena bazowa", value=f"{auto['base_price']} zł", inline=True)
+    embed.add_field(name="Cena bazowa", value=f"{auto['price']} zł", inline=True)
 
     # Możemy dodać tuning, póki co tylko pokazujemy poziomy
     tuning = auto.get("tuning", {})
