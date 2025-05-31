@@ -867,6 +867,8 @@ class PotwierdzenieUsuniecia(ui.View):
             self.dane["salony"].pop(self.user_id, None)
         if "gracze" in self.dane:
             self.dane["gracze"].pop(self.user_id, None)
+        if user_id in dane["salony"]:
+            del dane["salony"][user_id]
 
     # ZAPISZ ZMIANY DO PLIKU
         zapisz_dane(self.dane)
