@@ -1295,7 +1295,6 @@ async def kupauto(interaction: Interaction, numer: int):
     dane = wczytaj_dane()
     user_id = str(interaction.user.id)
 
-    # Zapewniamy kompletne dane gracza
     gracz = dane["gracze"].setdefault(user_id, {})
     gracz.setdefault("pieniadze", 0)
     gracz.setdefault("auto_prywatne", None)
@@ -1318,19 +1317,23 @@ async def kupauto(interaction: Interaction, numer: int):
     auto_do_kupienia = katalog[numer - 1]
     cena = auto_do_kupienia["price"]
 
-    if gracz["pieniadze"] < cena:
+    # Tutaj dodajemy losową obniżkę ceny od 15% do 30%
+    procent_obnizki = random.uniform(15, 30)
+    cena_po_obnizce = int(cena * (1 - procent_obnizki / 100))
+
+    if gracz["pieniadze"] < cena_po_obnizce:
         await interaction.response.send_message(
-            embed=Embed(description=f"❌ Nie masz wystarczająco pieniędzy. Potrzebujesz {cena} zł.", color=Color.red()),
+            embed=Embed(description=f"❌ Nie masz wystarczająco pieniędzy. Potrzebujesz {cena_po_obnizce} zł (po obniżce).", color=Color.red()),
             ephemeral=True
         )
         return
 
-    # Kupno auta
-    gracz["pieniadze"] -= cena
+    # Kupno auta z ceną po obniżce
+    gracz["pieniadze"] -= cena_po_obnizce
     gracz["auto_prywatne"] = {
         "brand": auto_do_kupienia["brand"],
         "model": auto_do_kupienia["model"],
-        "price": cena,
+        "price": cena_po_obnizce,
         "tuning": {
             "silnik": 0,
             "turbo": 0,
@@ -1344,7 +1347,7 @@ async def kupauto(interaction: Interaction, numer: int):
     zapisz_dane(dane)
 
     await interaction.response.send_message(
-        embed=Embed(description=f"✅ Kupiłeś {auto_do_kupienia['brand']} {auto_do_kupienia['model']} za {cena} zł jako swoje prywatne auto.", color=Color.green()),
+        embed=Embed(description=f"✅ Kupiłeś {auto_do_kupienia['brand']} {auto_do_kupienia['model']} za {cena_po_obnizce} zł (obniżka {procent_obnizki:.2f}%) jako swoje prywatne auto.", color=Color.green()),
         ephemeral=True
     )
 
