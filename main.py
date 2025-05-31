@@ -957,6 +957,7 @@ async def kup_auto(interaction: discord.Interaction, numer: int):
 
 
     # Odejmujemy kasę
+    pieniadze = dane["gracze"][user_id].get("pieniadze", 0)
     dane["gracze"][user_id]["pieniadze"] = pieniadze - cena
 
     # Dodajemy auto do salonu (lista aut w salonie)
