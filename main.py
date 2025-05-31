@@ -1290,43 +1290,62 @@ async def kupauto(interaction: Interaction, numer: int):
     dane = wczytaj_dane()
     user_id = str(interaction.user.id)
 
+    # Upewnij się, że gracz istnieje
+    if user_id not in dane["gracze"]:
+        dane["gracze"][user_id] = {
+            "pieniadze": 0,
+            "auto_prywatne": None
+        }
+
+    gracz = dane["gracze"][user_id]
+
+    if gracz["auto_prywatne"] is not None:
+        await interaction.response.send_message(
+            embed=Embed(description="❌ Masz już prywatne auto. Sprzedaj je przed zakupem nowego.", color=Color.red()),
+            ephemeral=True
+        )
+        return
+
     katalog = dane.get("ceny", [])
     if numer < 1 or numer > len(katalog):
-        await interaction.response.send_message(embed=Embed(description="❌ Niepoprawny numer auta z katalogu.", color=Color.red()), ephemeral=True)
+        await interaction.response.send_message(
+            embed=Embed(description="❌ Niepoprawny numer auta z katalogu.", color=Color.red()),
+            ephemeral=True
+        )
         return
 
     auto_do_kupienia = katalog[numer - 1]
-    gracz = dane["gracze"].get(user_id, {"pieniadze": 0, "auto_prywatne": None})
-
-    if gracz["auto_prywatne"] is not None:
-        await interaction.response.send_message(embed=Embed(description="❌ Masz już prywatne auto. Sprzedaj je przed zakupem nowego.", color=Color.red()), ephemeral=True)
-        return
-
     cena = auto_do_kupienia["price"]
+
     if gracz["pieniadze"] < cena:
-        await interaction.response.send_message(embed=Embed(description=f"❌ Nie masz wystarczająco pieniędzy. Potrzebujesz {cena} zł.", color=Color.red()), ephemeral=True)
+        await interaction.response.send_message(
+            embed=Embed(description=f"❌ Nie masz wystarczająco pieniędzy. Potrzebujesz {cena} zł.", color=Color.red()),
+            ephemeral=True
+        )
         return
 
-    # Kup auto
+    # Kupno auta
     gracz["pieniadze"] -= cena
     gracz["auto_prywatne"] = {
         "brand": auto_do_kupienia["brand"],
         "model": auto_do_kupienia["model"],
-        "base_price": cena,
-        "tuning": {  # puste tuning na start
+        "price": cena,
+        "tuning": {
             "silnik": 0,
             "turbo": 0,
             "nitro": 0,
             "opony": 0,
             "zawieszenie": 0,
-            "aerodynamika": 0
+            "aero": 0
         }
     }
 
-    dane["gracze"][user_id] = gracz
     zapisz_dane(dane)
 
-    await interaction.response.send_message(embed=Embed(description=f"✅ Kupiłeś prywatne auto **{auto_do_kupienia['brand']} {auto_do_kupienia['model']}** za {cena} zł.", color=Color.green()), ephemeral=True)
+    await interaction.response.send_message(
+        embed=Embed(description=f"✅ Kupiłeś {auto_do_kupienia['brand']} {auto_do_kupienia['model']} za {cena} zł jako swoje prywatne auto.", color=Color.green()),
+        ephemeral=True
+    )
 
 
 @bot.tree.command(name="mojeauto", description="Pokaż swoje prywatne auto")
