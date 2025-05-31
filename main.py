@@ -1070,6 +1070,38 @@ async def balans(interaction: discord.Interaction):
     )
 
 
+@bot.tree.command(name="ranking", description="Zobacz ranking najlepszych salonów")
+async def ranking(interaction: discord.Interaction):
+    dane = wczytaj_dane()
+
+    salony = dane.get("salony", {})
+    if not salony:
+        await interaction.response.send_message(
+            embed=discord.Embed(description="❌ Brak salonów w rankingu.", color=discord.Color.red()),
+            ephemeral=True
+        )
+        return
+
+    # Posortuj salony malejąco według wartości
+    top_salony = sorted(salony.items(), key=lambda x: x[1].get("wartosc", 0), reverse=True)[:10]
+
+    embed = discord.Embed(
+        title="🏆 Ranking Salonów (Top 10)",
+        description="Najlepsze salony według wartości 💰",
+        color=discord.Color.gold()
+    )
+
+    for miejsce, (user_id, salon) in enumerate(top_salony, start=1):
+        user = await interaction.client.fetch_user(int(user_id))
+        embed.add_field(
+            name=f"{miejsce}. {salon['nazwa']} ({user.display_name})",
+            value=f"Wartość: {salon['wartosc']} zł",
+            inline=False
+        )
+
+    await interaction.response.send_message(embed=embed, ephemeral=False)
+
+
 @bot.event
 async def on_message(message):
         if message.author.bot:
