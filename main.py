@@ -1568,19 +1568,19 @@ COMMENTARY_MESSAGES = [
     # dodaj 90+ podobnych...
 ] * 10
 
-async def rozlicz_zaklady(channel, winner_id, dane):
-    if winner_id not in BETS:
-        return None
+#async def rozlicz_zaklady(channel, winner_id, dane):
+    #if winner_id not in BETS:
+        #return None
 
-    bets = BETS.pop(winner_id)
-    tekst = "**🎉 Rozliczenie zakładów:**\n"
-    for bettor_id, kwota in bets:
-        wygrana = kwota * 2
-        dane["gracze"][str(bettor_id)]["pieniadze"] += wygrana
-        user = channel.guild.get_member(bettor_id)
-        user_mention = user.mention if user else f"<@{bettor_id}>"
-        tekst += f"{user_mention} wygrał(a) {wygrana} zł z zakładu.\n"
-    return tekst
+    #bets = BETS.pop(winner_id)
+    #tekst = "**🎉 Rozliczenie zakładów:**\n"
+    #for bettor_id, kwota in bets:
+        #wygrana = kwota * 2
+        #dane["gracze"][str(bettor_id)]["pieniadze"] += wygrana
+        #user = channel.guild.get_member(bettor_id)
+        #user_mention = user.mention if user else f"<@{bettor_id}>"
+        #tekst += f"{user_mention} wygrał(a) {wygrana} zł z zakładu.\n"
+    #return tekst
 
 class JoinRaceButton(ui.View):
     def __init__(self, wpisowe, challenger_id, channel, dane):
