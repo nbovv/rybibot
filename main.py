@@ -1752,7 +1752,7 @@ async def wyscig(interaction: Interaction, wpisowe: int):
     )
 
     # Rozliczamy zakłady
-    async def rozlicz_zaklady(winner_id: int, channel: discord.TextChannel):Add commentMore actions
+    async def rozlicz_zaklady(winner_id: int, channel: discord.TextChannel):
         global BETS
         dane = wczytaj_dane()
 
