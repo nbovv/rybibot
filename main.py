@@ -1753,57 +1753,7 @@ async def wyscig(interaction: Interaction, wpisowe: int):
     )
 
     # Rozliczamy zakłady
-    async def rozlicz_zaklady(winner_id: int, channel: discord.TextChannel):
-        global BETS
-        dane = wczytaj_dane()
-
-        zwyciezcy = BETS.get(winner_id, [])
-        przegrani = []
-
-    # Znajdź przegraną stronę
-        if ACTIVE_RACE:
-            przegrany_id = ACTIVE_RACE["challenger_id"] if winner_id != ACTIVE_RACE["challenger_id"] else ACTIVE_RACE["joiner_id"]
-            przegrani = BETS.get(przegrany_id, [])
-
-        tekst = ""
-
-        if not zwyciezcy and not przegrani:
-            tekst = "⚠️ Nikt nie obstawiał tego wyścigu."
-        else:
-            tekst += "**🎯 Wyniki zakładów:**\n"
-            total_lost = sum(kasa for _, kasa in przegrani)
-
-            for user_id, kwota in zwyciezcy:
-                gracz = dane["gracze"].get(str(user_id))
-                if gracz:
-                    wygrana = kwota * 2
-                    gracz["pieniadze"] += wygrana
-                    tekst += f"<@{user_id}> wygrał **{wygrana} zł** (x2 za trafny zakład)\n"
-
-            if przegrani:
-                tekst += "\n❌ Poniższe osoby przegrały zakłady:\n"
-                for user_id, kwota in przegrani:
-                    tekst += f"<@{user_id}> stracił **{kwota} zł**\n"
-
-            if zwyciezcy and przegrani:
-            # Bonus: przegrana pula trafia do zwycięzców (równo dzielona)
-                if total_lost > 0:
-                    bonus_per_winner = total_lost // len(zwyciezcy)
-                    for user_id, _ in zwyciezcy:
-                        gracz = dane["gracze"].get(str(user_id))
-                        if gracz:
-                            gracz["pieniadze"] += bonus_per_winner
-                    tekst += f"\n💰 Dodatkowo każdy zwycięzca otrzymał **{bonus_per_winner} zł** z przegranej puli."
-
-        zapisz_dane(dane)
-        BETS.clear()
-
-        embed = discord.Embed(
-            title="📊 Rozliczenie zakładów",
-            description=tekst,
-            color=discord.Color.blue()
-        )
-        await channel.send(embed=embed)
+    
     
 @bot.tree.command(name="zaakceptuj_wyscig", description="Zaakceptuj zaproszenie na wyścig")
 async def zaakceptuj_wyscig(interaction: Interaction):
@@ -1872,86 +1822,6 @@ async def zaakceptuj_wyscig(interaction: Interaction):
         description=f"Zwycięzca: {winner_name}\nWygrywa {suma} zł!",
         color=Color.green()
     ))
-
-@bot.tree.command(name="obstaw", description="Obstaw kto wygra wyścig")
-@app_commands.describe(kto="Użytkownik, na którego chcesz obstawić", kwota="Kwota zakładu (min. 1 zł)")
-async def obstaw(interaction: Interaction, kto: discord.User, kwota: int):
-    global ACTIVE_RACE, BETS
-    dane = wczytaj_dane()
-    user_id = str(interaction.user.id)
-
-    if ACTIVE_RACE is None or "challenger_id" not in ACTIVE_RACE or "joiner_id" not in ACTIVE_RACE:
-        embed = discord.Embed(
-            title="❌ Brak aktywnego wyścigu",
-            description="Nie ma obecnie żadnego aktywnego wyścigu.",
-            color=discord.Color.red()
-        )
-        await interaction.response.send_message(embed=embed, ephemeral=True)
-        return
-
-    challenger_id = ACTIVE_RACE["challenger_id"]
-    joiner_id = ACTIVE_RACE["joiner_id"]
-
-    if interaction.user.id in [challenger_id, joiner_id]:
-        embed = discord.Embed(
-            title="❌ Nie możesz obstawiać",
-            description="Uczestnicy wyścigu nie mogą obstawiać zakładów.",
-            color=discord.Color.red()
-        )
-        await interaction.response.send_message(embed=embed, ephemeral=True)
-        return
-
-    if kto.id not in [challenger_id, joiner_id]:
-        embed = discord.Embed(
-            title="❌ Niepoprawny gracz",
-            description="Możesz obstawiać tylko na jednego z dwóch uczestników wyścigu.",
-            color=discord.Color.red()
-        )
-        await interaction.response.send_message(embed=embed, ephemeral=True)
-        return
-
-    if kto.id == interaction.user.id:
-        embed = discord.Embed(
-            title="❌ Nie możesz obstawiać na siebie",
-            description="Nie możesz obstawiać na samego siebie.",
-            color=discord.Color.red()
-        )
-        await interaction.response.send_message(embed=embed, ephemeral=True)
-        return
-
-    if kwota < 1:
-        embed = discord.Embed(
-            title="❌ Niepoprawna kwota",
-            description="Minimalna kwota zakładu to 1 zł.",
-            color=discord.Color.red()
-        )
-        await interaction.response.send_message(embed=embed, ephemeral=True)
-        return
-
-    gracz = dane["gracze"].get(user_id)
-    if not gracz or gracz["pieniadze"] < kwota:
-        embed = discord.Embed(
-            title="❌ Za mało pieniędzy",
-            description="Nie masz wystarczająco pieniędzy na zakład.",
-            color=discord.Color.red()
-        )
-        await interaction.response.send_message(embed=embed, ephemeral=True)
-        return
-
-    gracz["pieniadze"] -= kwota
-    BETS.setdefault(kto.id, []).append((interaction.user.id, kwota))
-    zapisz_dane(dane)
-
-    embed = discord.Embed(
-        title="✅ Zakład przyjęty!",
-        description=f"Obstawiłeś **{kwota} zł** na wygraną gracza {kto.mention}.",
-        color=discord.Color.green()
-    )
-    await interaction.response.send_message(embed=embed, ephemeral=True)
-# Dodaj obsługę wypłat dla poprawnych zakładów w `zaakceptuj_wyscig`:
-#   if BETS.get(winner_id):
-#       for uid, kwota in BETS[winner_id]: dane["gracze"][str(uid)]["pieniadze"] += kwota * 2
-#       del BETS[winner_id]
 
 
 @bot.event
