@@ -1875,7 +1875,7 @@ async def zaakceptuj_wyscig(interaction: Interaction):
 @bot.tree.command(name="obstaw", description="Obstaw kto wygra wyścig")
 @app_commands.describe(kto="Użytkownik, na którego chcesz obstawić", kwota="Kwota zakładu (min. 1 zł)")
 async def obstaw(interaction: Interaction, kto: discord.User, kwota: int):
-    global ACTIVE_RACE, BETSAdd commentMore actions
+    global ACTIVE_RACE, BETS
     dane = wczytaj_dane()
     user_id = str(interaction.user.id)
 
