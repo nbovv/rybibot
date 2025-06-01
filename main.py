@@ -14,6 +14,7 @@ from discord import Interaction
 from discord import Embed, Color
 from discord.ui import View, Button
 
+ACTIVE_RACE = None  # Słownik z danymi wyścigu lub None
 BETS = {}
 
 DATA_FILE = "/var/data/dealer_data.json"
@@ -1567,9 +1568,68 @@ COMMENTARY_MESSAGES = [
     # dodaj 90+ podobnych...
 ] * 10
 
-@bot.tree.command(name="wyscig", description="Hostuj wyścig uliczny 1v1")
-@app_commands.describe(wpisowe="Kwota wpisowego")
+async def rozlicz_zaklady(channel, winner_id, dane):
+    if winner_id not in BETS:
+        return None
+
+    bets = BETS.pop(winner_id)
+    tekst = "**🎉 Rozliczenie zakładów:**\n"
+    for bettor_id, kwota in bets:
+        wygrana = kwota * 2
+        dane["gracze"][str(bettor_id)]["pieniadze"] += wygrana
+        user = channel.guild.get_member(bettor_id)
+        user_mention = user.mention if user else f"<@{bettor_id}>"
+        tekst += f"{user_mention} wygrał(a) {wygrana} zł z zakładu.\n"
+    return tekst
+
+class JoinRaceButton(ui.View):
+    def __init__(self, wpisowe, challenger_id, channel, dane):
+        super().__init__(timeout=60)  # 60 sekund na dołączenie
+        self.wpisowe = wpisowe
+        self.challenger_id = challenger_id
+        self.channel = channel
+        self.dane = dane
+        self.challenger_joined = False
+        self.joiner_id = None
+
+    @ui.button(label="Dołącz do wyścigu!", style=discord.ButtonStyle.green)
+    async def join(self, interaction: Interaction, button: ui.Button):
+        user_id = str(interaction.user.id)
+        gracz = self.dane["gracze"].get(user_id)
+        if not gracz or gracz["pieniadze"] < self.wpisowe:
+            await interaction.response.send_message("❌ Nie masz wystarczająco pieniędzy, aby dołączyć.", ephemeral=True)
+            return
+        
+        # Challenger automatycznie dołącza przy starcie, ale potwierdź jeśli to challenger:
+        if interaction.user.id == self.challenger_id:
+            if self.challenger_joined:
+                await interaction.response.send_message("❌ Już jesteś w wyścigu.", ephemeral=True)
+                return
+            self.challenger_joined = True
+            await interaction.response.send_message("✅ Dołączyłeś do wyścigu jako wyzywający.", ephemeral=True)
+            return
+        
+        # Ktoś inny dołącza jako przeciwnik:
+        if self.joiner_id:
+            await interaction.response.send_message("❌ Wyścig już ma przeciwnika.", ephemeral=True)
+            return
+
+        if user_id == str(self.challenger_id):
+            await interaction.response.send_message("❌ Nie możesz dołączyć do własnego wyścigu jako przeciwnik.", ephemeral=True)
+            return
+
+        self.joiner_id = interaction.user.id
+        await interaction.response.send_message(f"✅ Dołączyłeś do wyścigu przeciwko <@{self.challenger_id}>!", ephemeral=False)
+
+        # Po dołączeniu obu graczy — start wyścigu
+        self.stop()  # Kończymy timeout i uruchamiamy wyścig
+
+
+@bot.tree.command(name="wyscig", description="Hostuj wyścig 1v1 z wpisowym")
+@app_commands.describe(wpisowe="Kwota wpisowego (minimum 0)")
 async def wyscig(interaction: Interaction, wpisowe: int):
+    global ACTIVE_RACE
+
     if wpisowe < 0:
         await interaction.response.send_message("❌ Wpisowe nie może być ujemne.", ephemeral=True)
         return
@@ -1579,103 +1639,128 @@ async def wyscig(interaction: Interaction, wpisowe: int):
     gracz = dane["gracze"].get(user_id)
 
     if not gracz or not gracz.get("auto_prywatne"):
-        await interaction.response.send_message("❌ Musisz mieć prywatne auto, aby hostować wyścig.", ephemeral=True)
+        await interaction.response.send_message("❌ Musisz mieć prywatne auto, aby zorganizować wyścig.", ephemeral=True)
         return
 
     if gracz["pieniadze"] < wpisowe:
         await interaction.response.send_message("❌ Nie masz wystarczająco pieniędzy na wpisowe.", ephemeral=True)
         return
 
-    if interaction.user.id in ACTIVE_RACES:
-        await interaction.response.send_message("❌ Już hostujesz wyścig!", ephemeral=True)
+    if ACTIVE_RACE is not None:
+        await interaction.response.send_message("❌ Już trwa aktywny wyścig, poczekaj na jego zakończenie.", ephemeral=True)
         return
 
-    ACTIVE_RACES[interaction.user.id] = {
-        "challenger": interaction.user.id,
-        "fee": wpisowe
+    ACTIVE_RACE = {
+        "challenger_id": interaction.user.id,
+        "wpisowe": wpisowe,
+        "channel": interaction.channel,
+        "dane": dane,
     }
 
-    class DolaczButton(Button):
-        def __init__(self):
-            super().__init__(label="🚀 Dołącz do wyścigu", style=discord.ButtonStyle.green)
+    embed = Embed(
+        title="🏁 Wyścig uliczny - nowe wyzwanie!",
+        description=(
+            f"Organizator: {interaction.user.mention}\n"
+            f"Wpisowe: {wpisowe} zł\n\n"
+            "Kliknij **Dołącz do wyścigu!**, aby wziąć udział.\n"
+            "Musisz mieć prywatne auto i wystarczająco pieniędzy na wpisowe."
+        ),
+        color=Color.orange()
+    )
+    view = JoinRaceButton(wpisowe, interaction.user.id, interaction.channel, dane)
 
-        async def callback(self, button_interaction: Interaction):
-            challenger_id = interaction.user.id
-            joiner_id = button_interaction.user.id
+    await interaction.response.send_message(embed=embed, view=view)
 
-            if joiner_id == challenger_id:
-                await button_interaction.response.send_message("❌ Nie możesz dołączyć do własnego wyścigu.", ephemeral=True)
-                return
+    # Czekamy na dołączenie przeciwnika lub timeout
+    timeout = await view.wait()
+    if not view.joiner_id:
+        ACTIVE_RACE = None
+        await interaction.channel.send("❌ Nikt nie dołączył do wyścigu, anulowano.")
+        return
 
-            dane = wczytaj_dane()
-            gracz1 = dane["gracze"].get(str(challenger_id))
-            gracz2 = dane["gracze"].get(str(joiner_id))
+    # Rozpoczynamy wyścig
+    challenger_id = ACTIVE_RACE["challenger_id"]
+    joiner_id = view.joiner_id
+    wpisowe = ACTIVE_RACE["wpisowe"]
+    dane = ACTIVE_RACE["dane"]
+    channel = ACTIVE_RACE["channel"]
 
-            if not gracz2 or not gracz2.get("auto_prywatne"):
-                await button_interaction.response.send_message("❌ Musisz mieć prywatne auto, aby dołączyć.", ephemeral=True)
-                return
+    # Sprawdź auta obu graczy:
+    gracz1 = dane["gracze"].get(str(challenger_id))
+    gracz2 = dane["gracze"].get(str(joiner_id))
+    if not gracz1.get("auto_prywatne") or not gracz2.get("auto_prywatne"):
+        await channel.send("❌ Jeden z graczy nie ma prywatnego auta, wyścig anulowany.")
+        ACTIVE_RACE = None
+        return
 
-            fee = ACTIVE_RACES.pop(challenger_id)["fee"]
+    if gracz1["pieniadze"] < wpisowe or gracz2["pieniadze"] < wpisowe:
+        await channel.send("❌ Jeden z graczy nie ma wystarczająco pieniędzy na wpisowe, wyścig anulowany.")
+        ACTIVE_RACE = None
+        return
 
-            if gracz1["pieniadze"] < fee or gracz2["pieniadze"] < fee:
-                await button_interaction.response.send_message("❌ Obaj gracze muszą mieć wystarczająco pieniędzy.", ephemeral=True)
-                return
+    # Odejmujemy wpisowe od obu:
+    gracz1["pieniadze"] -= wpisowe
+    gracz2["pieniadze"] -= wpisowe
 
-            # Odejmij wpisowe
-            gracz1["pieniadze"] -= fee
-            gracz2["pieniadze"] -= fee
+    # Obliczamy moc auta + tuning
+    def oblicz_moc(auto):
+        bazowa = next((a["moc_bazowa"] for a in KATALOG_AUT if a["brand"] == auto["brand"] and a["model"] == auto["model"]), 0)
+        bonus = sum(auto["tuning"].get(k, 0) * 5 for k in auto["tuning"])
+        return bazowa + bonus
 
-            auto1 = gracz1["auto_prywatne"]
-            auto2 = gracz2["auto_prywatne"]
-
-            def oblicz_moc(auto):
-                bazowa = next((a["moc_bazowa"] for a in KATALOG_AUT if a["brand"] == auto["brand"] and a["model"] == auto["model"]), 0)
-                bonus = sum(auto["tuning"].get(k, 0) * 5 for k in auto["tuning"])
-                return bazowa + bonus
-
-            moc1 = oblicz_moc(auto1)
-            moc2 = oblicz_moc(auto2)
-
-            embed = Embed(
-                title="🏁 Wyścig uliczny!",
-                description=f"{bot.get_user(challenger_id).mention} vs {button_interaction.user.mention}\nStart za 3 sekundy...",
-                color=Color.orange()
-            )
-            await button_interaction.response.send_message(embed=embed)
-            await asyncio.sleep(3)
-
-            msg = await button_interaction.followup.send(embed=Embed(title="🏁 Wyścig trwa!", description="🔥 Start!", color=Color.blurple()), wait=True)
-
-            czas_wyscigu = random.randint(10, 20)
-            for _ in range(czas_wyscigu):
-                komentarz = random.choice(COMMENTARY_MESSAGES).format(driver1=bot.get_user(challenger_id).name, driver2=button_interaction.user.name)
-                await msg.edit(embed=Embed(title="🏁 Wyścig trwa!", description=komentarz, color=Color.blurple()))
-                await asyncio.sleep(2)
-
-            wynik1 = moc1 + random.randint(-20, 20)
-            wynik2 = moc2 + random.randint(-20, 20)
-
-            winner_id = challenger_id if wynik1 > wynik2 else joiner_id
-            suma = fee * 2
-            dane["gracze"][str(winner_id)]["pieniadze"] += suma
-
-            zapisz_dane(dane)
-
-            await msg.edit(embed=Embed(
-                title="🏁 Wyścig zakończony!",
-                description=f"Zwycięzca: {bot.get_user(winner_id).mention}\nWygrywa {suma} zł!",
-                color=Color.green()
-            ))
-
-    view = View()
-    view.add_item(DolaczButton())
+    moc1 = oblicz_moc(gracz1["auto_prywatne"])
+    moc2 = oblicz_moc(gracz2["auto_prywatne"])
 
     embed = Embed(
-        title="🏁 Nowy wyścig uliczny!",
-        description=f"🏎️ {interaction.user.mention} hostuje wyścig!\n💰 Wpisowe: **{wpisowe} zł**\nKliknij przycisk, aby dołączyć!",
-        color=Color.blurple()
+        title="🏁 Wyścig uliczny - start!",
+        description=f"{bot.get_user(challenger_id).mention} vs {bot.get_user(joiner_id).mention}\nStart za 3 sekundy...",
+        color=Color.orange()
     )
-    await interaction.response.send_message(embed=embed, view=view)
+    await channel.send(embed=embed)
+    await asyncio.sleep(3)
+
+    msg = await channel.send(embed=Embed(title="🏁 Wyścig trwa!", description="🔥 Ruszyli!", color=Color.blurple()))
+
+    czas_wyscigu = random.randint(15, 30)
+    for _ in range(czas_wyscigu):
+        komentarz = random.choice(COMMENTARY_MESSAGES).format(
+            driver1=bot.get_user(challenger_id).name,
+            driver2=bot.get_user(joiner_id).name
+        )
+        await msg.edit(embed=Embed(title="🏁 Wyścig trwa!", description=komentarz, color=Color.blurple()))
+        await asyncio.sleep(2)  # komentarze co 2 sekundy
+
+    wynik1 = moc1 + random.randint(-20, 20)
+    wynik2 = moc2 + random.randint(-20, 20)
+
+    if wynik1 == wynik2:
+        # remis - losujemy zwycięzcę
+        winner_id = random.choice([challenger_id, joiner_id])
+    else:
+        winner_id = challenger_id if wynik1 > wynik2 else joiner_id
+
+    suma = wpisowe * 2
+    dane["gracze"][str(winner_id)]["pieniadze"] += suma
+
+    # Tworzymy embed z wynikiem
+    wynik_embed = Embed(
+        title="🏁 Wyścig zakończony!",
+        description=(
+            f"Zwycięzca: {bot.get_user(winner_id).mention}\n"
+            f"Wygrywa {suma} zł!\n\n"
+        ),
+        color=Color.green()
+    )
+
+    # Rozliczamy zakłady
+    rozliczenie_tekst = await rozlicz_zaklady(channel, winner_id, dane)
+    if rozliczenie_tekst:
+        wynik_embed.description += rozliczenie_tekst
+
+    zapisz_dane(dane)
+    ACTIVE_RACE = None
+
+    await msg.edit(embed=wynik_embed)
     
 @bot.tree.command(name="zaakceptuj_wyscig", description="Zaakceptuj zaproszenie na wyścig")
 async def zaakceptuj_wyscig(interaction: Interaction):
@@ -1746,45 +1831,80 @@ async def zaakceptuj_wyscig(interaction: Interaction):
     ))
 
 @bot.tree.command(name="obstaw", description="Obstaw kto wygra wyścig")
-@app_commands.describe(kto="ID gracza którego obstawiasz", kwota="Kwota zakładu")
+@app_commands.describe(kto="ID gracza którego obstawiasz", kwota="Kwota zakładu (min. 1 zł)")
 async def obstaw(interaction: Interaction, kto: int, kwota: int):
+    global ACTIVE_RACE, BETS
     dane = wczytaj_dane()
     user_id = str(interaction.user.id)
 
-    gracz = dane["gracze"].get(user_id)
-    if not gracz:
-        await interaction.response.send_message("❌ Nie masz konta gracza.", ephemeral=True)
+    if ACTIVE_RACE is None:
+        embed = discord.Embed(
+            title="❌ Brak aktywnego wyścigu",
+            description="Aktualnie nie ma żadnego wyścigu, na który można obstawiać.",
+            color=discord.Color.red()
+        )
+        await interaction.response.send_message(embed=embed, ephemeral=True)
         return
 
-    if kwota <= 0:
-        await interaction.response.send_message("❌ Kwota zakładu musi być większa niż 0.", ephemeral=True)
+    challenger_id = ACTIVE_RACE["challenger_id"]
+    joiner_id = getattr(ACTIVE_RACE, "joiner_id", None)
+    # joiner_id może być w JoinRaceButton, więc lepiej sprawdzić w ACTIVE_RACE, jeśli masz inaczej to popraw
+
+    # Sprawdź czy podany ID to jeden z zawodników:
+    if kto not in [challenger_id, joiner_id]:
+        embed = discord.Embed(
+            title="❌ Niepoprawny gracz",
+            description="Możesz obstawiać tylko na jednego z uczestników aktywnego wyścigu.",
+            color=discord.Color.red()
+        )
+        await interaction.response.send_message(embed=embed, ephemeral=True)
+        return
+
+    if kwota < 1:
+        embed = discord.Embed(
+            title="❌ Niepoprawna kwota",
+            description="Kwota zakładu musi być co najmniej 1 zł.",
+            color=discord.Color.red()
+        )
+        await interaction.response.send_message(embed=embed, ephemeral=True)
+        return
+
+    gracz = dane["gracze"].get(user_id)
+    if not gracz:
+        embed = discord.Embed(
+            title="❌ Nie znaleziono gracza",
+            description="Nie udało się znaleźć Twoich danych.",
+            color=discord.Color.red()
+        )
+        await interaction.response.send_message(embed=embed, ephemeral=True)
         return
 
     if gracz["pieniadze"] < kwota:
-        await interaction.response.send_message("❌ Nie masz tyle pieniędzy na zakład.", ephemeral=True)
+        embed = discord.Embed(
+            title="❌ Za mało pieniędzy",
+            description=f"Nie masz wystarczająco pieniędzy na obstawienie {kwota} zł.",
+            color=discord.Color.red()
+        )
+        await interaction.response.send_message(embed=embed, ephemeral=True)
         return
 
-    # Sprawdź czy gracz, na którego obstawiamy, bierze udział w jakimś wyścigu
-    aktywni = []
-    for race in ACTIVE_RACES.values():
-        aktywni.append(race["challenger"])
-        aktywni.append(race.get("joiner"))  # jeśli dołączony
-
-    if kto not in aktywni:
-        await interaction.response.send_message("❌ Ten gracz nie bierze udziału w żadnym wyścigu.", ephemeral=True)
-        return
-
-    # Odejmij pieniądze i zapisz zakład
+    # Odejmij pieniądze od gracza
     gracz["pieniadze"] -= kwota
+
+    # Dodaj zakład do słownika
     BETS.setdefault(kto, []).append((interaction.user.id, kwota))
 
     zapisz_dane(dane)
 
-    obstawiany = bot.get_user(kto)
-    obstawiony_nick = obstawiany.name if obstawiany else f"Gracz o ID {kto}"
-
-    await interaction.response.send_message(f"✅ Obstawiono **{kwota} zł** na **{obstawiony_nick}**", ephemeral=True)
-
+    embed = discord.Embed(
+        title="✅ Zakład przyjęty!",
+        description=(
+            f"Obstawiłeś **{kwota} zł** na wygraną <@{kto}>.\n"
+            f"Pozostało Ci **{gracz['pieniadze']} zł**."
+        ),
+        color=discord.Color.green()
+    )
+    await interaction.response.send_message(embed=embed, ephemeral=True)
 # Dodaj obsługę wypłat dla poprawnych zakładów w `zaakceptuj_wyscig`:
 #   if BETS.get(winner_id):
 #       for uid, kwota in BETS[winner_id]: dane["gracze"][str(uid)]["pieniadze"] += kwota * 2
