@@ -1831,8 +1831,8 @@ async def zaakceptuj_wyscig(interaction: Interaction):
     ))
 
 @bot.tree.command(name="obstaw", description="Obstaw kto wygra wyścig")
-@app_commands.describe(kto="ID gracza którego obstawiasz", kwota="Kwota zakładu (min. 1 zł)")
-async def obstaw(interaction: Interaction, kto: int, kwota: int):
+@app_commands.describe(kto="Użytkownik, na którego chcesz obstawić", kwota="Kwota zakładu (min. 1 zł)")
+async def obstaw(interaction: Interaction, kto: discord.User, kwota: int):
     global ACTIVE_RACE, BETS
     dane = wczytaj_dane()
     user_id = str(interaction.user.id)
@@ -1847,11 +1847,10 @@ async def obstaw(interaction: Interaction, kto: int, kwota: int):
         return
 
     challenger_id = ACTIVE_RACE["challenger_id"]
-    joiner_id = getattr(ACTIVE_RACE, "joiner_id", None)
-    # joiner_id może być w JoinRaceButton, więc lepiej sprawdzić w ACTIVE_RACE, jeśli masz inaczej to popraw
+    joiner_id = ACTIVE_RACE.get("joiner_id")
 
-    # Sprawdź czy podany ID to jeden z zawodników:
-    if kto not in [challenger_id, joiner_id]:
+    # Sprawdź czy podany użytkownik bierze udział w wyścigu
+    if kto.id not in [challenger_id, joiner_id]:
         embed = discord.Embed(
             title="❌ Niepoprawny gracz",
             description="Możesz obstawiać tylko na jednego z uczestników aktywnego wyścigu.",
@@ -1892,14 +1891,14 @@ async def obstaw(interaction: Interaction, kto: int, kwota: int):
     gracz["pieniadze"] -= kwota
 
     # Dodaj zakład do słownika
-    BETS.setdefault(kto, []).append((interaction.user.id, kwota))
+    BETS.setdefault(kto.id, []).append((interaction.user.id, kwota))
 
     zapisz_dane(dane)
 
     embed = discord.Embed(
         title="✅ Zakład przyjęty!",
         description=(
-            f"Obstawiłeś **{kwota} zł** na wygraną <@{kto}>.\n"
+            f"Obstawiłeś **{kwota} zł** na wygraną {kto.mention}.\n"
             f"Pozostało Ci **{gracz['pieniadze']} zł**."
         ),
         color=discord.Color.green()
