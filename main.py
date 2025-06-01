@@ -1880,23 +1880,40 @@ async def obstaw(interaction: Interaction, kto: discord.User, kwota: int):
     dane = wczytaj_dane()
     user_id = str(interaction.user.id)
 
-    if ACTIVE_RACE is None:
+    if ACTIVE_RACE is None or "challenger_id" not in ACTIVE_RACE or "joiner_id" not in ACTIVE_RACE:
         embed = discord.Embed(
             title="❌ Brak aktywnego wyścigu",
-            description="Aktualnie nie ma żadnego wyścigu, na który można obstawiać.",
+            description="Nie ma obecnie żadnego aktywnego wyścigu.",
             color=discord.Color.red()
         )
         await interaction.response.send_message(embed=embed, ephemeral=True)
         return
 
     challenger_id = ACTIVE_RACE["challenger_id"]
-    joiner_id = ACTIVE_RACE.get("joiner_id")
+    joiner_id = ACTIVE_RACE["joiner_id"]
 
-    # Sprawdź czy podany użytkownik bierze udział w wyścigu
+    if interaction.user.id in [challenger_id, joiner_id]:
+        embed = discord.Embed(
+            title="❌ Nie możesz obstawiać",
+            description="Uczestnicy wyścigu nie mogą obstawiać zakładów.",
+            color=discord.Color.red()
+        )
+        await interaction.response.send_message(embed=embed, ephemeral=True)
+        return
+
     if kto.id not in [challenger_id, joiner_id]:
         embed = discord.Embed(
             title="❌ Niepoprawny gracz",
-            description="Możesz obstawiać tylko na jednego z uczestników aktywnego wyścigu.",
+            description="Możesz obstawiać tylko na jednego z dwóch uczestników wyścigu.",
+            color=discord.Color.red()
+        )
+        await interaction.response.send_message(embed=embed, ephemeral=True)
+        return
+
+    if kto.id == interaction.user.id:
+        embed = discord.Embed(
+            title="❌ Nie możesz obstawiać na siebie",
+            description="Nie możesz obstawiać na samego siebie.",
             color=discord.Color.red()
         )
         await interaction.response.send_message(embed=embed, ephemeral=True)
@@ -1905,45 +1922,29 @@ async def obstaw(interaction: Interaction, kto: discord.User, kwota: int):
     if kwota < 1:
         embed = discord.Embed(
             title="❌ Niepoprawna kwota",
-            description="Kwota zakładu musi być co najmniej 1 zł.",
+            description="Minimalna kwota zakładu to 1 zł.",
             color=discord.Color.red()
         )
         await interaction.response.send_message(embed=embed, ephemeral=True)
         return
 
     gracz = dane["gracze"].get(user_id)
-    if not gracz:
-        embed = discord.Embed(
-            title="❌ Nie znaleziono gracza",
-            description="Nie udało się znaleźć Twoich danych.",
-            color=discord.Color.red()
-        )
-        await interaction.response.send_message(embed=embed, ephemeral=True)
-        return
-
-    if gracz["pieniadze"] < kwota:
+    if not gracz or gracz["pieniadze"] < kwota:
         embed = discord.Embed(
             title="❌ Za mało pieniędzy",
-            description=f"Nie masz wystarczająco pieniędzy na obstawienie {kwota} zł.",
+            description="Nie masz wystarczająco pieniędzy na zakład.",
             color=discord.Color.red()
         )
         await interaction.response.send_message(embed=embed, ephemeral=True)
         return
 
-    # Odejmij pieniądze od gracza
     gracz["pieniadze"] -= kwota
-
-    # Dodaj zakład do słownika
     BETS.setdefault(kto.id, []).append((interaction.user.id, kwota))
-
     zapisz_dane(dane)
 
     embed = discord.Embed(
         title="✅ Zakład przyjęty!",
-        description=(
-            f"Obstawiłeś **{kwota} zł** na wygraną {kto.mention}.\n"
-            f"Pozostało Ci **{gracz['pieniadze']} zł**."
-        ),
+        description=f"Obstawiłeś **{kwota} zł** na wygraną gracza {kto.mention}.",
         color=discord.Color.green()
     )
     await interaction.response.send_message(embed=embed, ephemeral=True)
