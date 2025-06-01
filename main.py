@@ -1754,56 +1754,56 @@ async def wyscig(interaction: Interaction, wpisowe: int):
 
     # Rozliczamy zakłady
     async def rozlicz_zaklady(winner_id: int, channel: discord.TextChannel):
-    global BETS
-    dane = wczytaj_dane()
+        global BETS
+        dane = wczytaj_dane()
 
-    zwyciezcy = BETS.get(winner_id, [])
-    przegrani = []
+        zwyciezcy = BETS.get(winner_id, [])
+        przegrani = []
 
     # Znajdź przegraną stronę
-    if ACTIVE_RACE:
-        przegrany_id = ACTIVE_RACE["challenger_id"] if winner_id != ACTIVE_RACE["challenger_id"] else ACTIVE_RACE["joiner_id"]
-        przegrani = BETS.get(przegrany_id, [])
+        if ACTIVE_RACE:
+            przegrany_id = ACTIVE_RACE["challenger_id"] if winner_id != ACTIVE_RACE["challenger_id"] else ACTIVE_RACE["joiner_id"]
+            przegrani = BETS.get(przegrany_id, [])
 
-    tekst = ""
+        tekst = ""
 
-    if not zwyciezcy and not przegrani:
-        tekst = "⚠️ Nikt nie obstawiał tego wyścigu."
-    else:
-        tekst += "**🎯 Wyniki zakładów:**\n"
-        total_lost = sum(kasa for _, kasa in przegrani)
+        if not zwyciezcy and not przegrani:
+            tekst = "⚠️ Nikt nie obstawiał tego wyścigu."
+        else:
+            tekst += "**🎯 Wyniki zakładów:**\n"
+            total_lost = sum(kasa for _, kasa in przegrani)
 
-        for user_id, kwota in zwyciezcy:
-            gracz = dane["gracze"].get(str(user_id))
-            if gracz:
-                wygrana = kwota * 2
-                gracz["pieniadze"] += wygrana
-                tekst += f"<@{user_id}> wygrał **{wygrana} zł** (x2 za trafny zakład)\n"
+            for user_id, kwota in zwyciezcy:
+                gracz = dane["gracze"].get(str(user_id))
+                if gracz:
+                    wygrana = kwota * 2
+                    gracz["pieniadze"] += wygrana
+                    tekst += f"<@{user_id}> wygrał **{wygrana} zł** (x2 za trafny zakład)\n"
 
-        if przegrani:
-            tekst += "\n❌ Poniższe osoby przegrały zakłady:\n"
-            for user_id, kwota in przegrani:
-                tekst += f"<@{user_id}> stracił **{kwota} zł**\n"
+            if przegrani:
+                tekst += "\n❌ Poniższe osoby przegrały zakłady:\n"
+                for user_id, kwota in przegrani:
+                    tekst += f"<@{user_id}> stracił **{kwota} zł**\n"
 
-        if zwyciezcy and przegrani:
+            if zwyciezcy and przegrani:
             # Bonus: przegrana pula trafia do zwycięzców (równo dzielona)
-            if total_lost > 0:
-                bonus_per_winner = total_lost // len(zwyciezcy)
-                for user_id, _ in zwyciezcy:
-                    gracz = dane["gracze"].get(str(user_id))
-                    if gracz:
-                        gracz["pieniadze"] += bonus_per_winner
-                tekst += f"\n💰 Dodatkowo każdy zwycięzca otrzymał **{bonus_per_winner} zł** z przegranej puli."
+                if total_lost > 0:
+                    bonus_per_winner = total_lost // len(zwyciezcy)
+                    for user_id, _ in zwyciezcy:
+                        gracz = dane["gracze"].get(str(user_id))
+                        if gracz:
+                            gracz["pieniadze"] += bonus_per_winner
+                    tekst += f"\n💰 Dodatkowo każdy zwycięzca otrzymał **{bonus_per_winner} zł** z przegranej puli."
 
-    zapisz_dane(dane)
-    BETS.clear()
+        zapisz_dane(dane)
+        BETS.clear()
 
-    embed = discord.Embed(
-        title="📊 Rozliczenie zakładów",
-        description=tekst,
-        color=discord.Color.blue()
-    )
-    await channel.send(embed=embed)
+        embed = discord.Embed(
+            title="📊 Rozliczenie zakładów",
+            description=tekst,
+            color=discord.Color.blue()
+        )
+        await channel.send(embed=embed)
     
 @bot.tree.command(name="zaakceptuj_wyscig", description="Zaakceptuj zaproszenie na wyścig")
 async def zaakceptuj_wyscig(interaction: Interaction):
