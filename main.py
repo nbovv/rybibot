@@ -1803,7 +1803,7 @@ async def zaakceptuj_wyscig(interaction: Interaction):
 
     msg = await interaction.followup.send(embed=Embed(title="🏁 Wyścig trwa!", description="🔥 Odliczanie zakończone, ruszyli!", color=Color.blurple()), wait=True)
 
-    czas_wyscigu = random.randint(15, 30)
+    czas_wyscigu = random.randint(10, 20)
     for _ in range(czas_wyscigu):
         komentarz = random.choice(COMMENTARY_MESSAGES).format(driver1=bot.get_user(challenger_id).name, driver2=interaction.user.name)
         await msg.edit(embed=Embed(title="🏁 Wyścig trwa!", description=komentarz, color=Color.blurple()))
