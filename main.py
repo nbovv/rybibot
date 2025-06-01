@@ -1565,7 +1565,7 @@ COMMENTARY_MESSAGES = [
     "🚀 {driver1} łapie niesamowite przyspieszenie!",
     "🌀 {driver2} robi piękny drift przez zakręt!",
     "👀 Widzowie nie mogą oderwać wzroku od tej akcji!", 
-]
+] * 10
 
 #async def rozlicz_zaklady(channel, winner_id, dane):
     #if winner_id not in BETS:
