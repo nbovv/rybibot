@@ -12,6 +12,7 @@ from discord import ui
 import random
 from discord import Interaction
 from discord import Embed, Color
+from discord.ui import View, Button
 
 DATA_FILE = "/var/data/dealer_data.json"
 
@@ -1564,43 +1565,115 @@ COMMENTARY_MESSAGES = [
     # dodaj 90+ podobnych...
 ] * 10
 
-@bot.tree.command(name="wyscig", description="Wyzwi gracza na wyścig 1v1")
-@app_commands.describe(uzytkownik="Użytkownik do wyzwania", wpisowe="Kwota wpisowego")
-async def wyscig(interaction: Interaction, uzytkownik: discord.User, wpisowe: int):
-    if uzytkownik.id == interaction.user.id:
-        await interaction.response.send_message("❌ Nie możesz wyzwać samego siebie.", ephemeral=True)
-        return
-
+@bot.tree.command(name="wyscig", description="Hostuj wyścig uliczny 1v1")
+@app_commands.describe(wpisowe="Kwota wpisowego")
+async def wyscig(interaction: Interaction, wpisowe: int):
     if wpisowe < 0:
         await interaction.response.send_message("❌ Wpisowe nie może być ujemne.", ephemeral=True)
         return
 
     dane = wczytaj_dane()
     user_id = str(interaction.user.id)
-    target_id = str(uzytkownik.id)
+    gracz = dane["gracze"].get(user_id)
 
-    gracz1 = dane["gracze"].get(user_id)
-    gracz2 = dane["gracze"].get(target_id)
-
-    if not gracz1 or not gracz1.get("auto_prywatne") or not gracz2 or not gracz2.get("auto_prywatne"):
-        await interaction.response.send_message("❌ Obaj gracze muszą mieć prywatne auta.", ephemeral=True)
+    if not gracz or not gracz.get("auto_prywatne"):
+        await interaction.response.send_message("❌ Musisz mieć prywatne auto, aby hostować wyścig.", ephemeral=True)
         return
 
-    if gracz1["pieniadze"] < wpisowe or gracz2["pieniadze"] < wpisowe:
-        await interaction.response.send_message("❌ Obaj gracze muszą mieć wystarczająco pieniędzy na wpisowe.", ephemeral=True)
+    if gracz["pieniadze"] < wpisowe:
+        await interaction.response.send_message("❌ Nie masz wystarczająco pieniędzy na wpisowe.", ephemeral=True)
         return
 
-    ACTIVE_RACES[uzytkownik.id] = {
+    if interaction.user.id in ACTIVE_RACES:
+        await interaction.response.send_message("❌ Już hostujesz wyścig!", ephemeral=True)
+        return
+
+    ACTIVE_RACES[interaction.user.id] = {
         "challenger": interaction.user.id,
         "fee": wpisowe
     }
 
-    await interaction.response.send_message(
-        f"🚗 {uzytkownik.mention}, zostałeś wyzwany na wyścig uliczny przez {interaction.user.mention}!\n"
-        f"Wpisowe: {wpisowe} zł\n"
-        f"Użyj komendy `/zaakceptuj_wyscig`, aby przyjąć.",
-        ephemeral=False
+    class DolaczButton(Button):
+        def __init__(self):
+            super().__init__(label="🚀 Dołącz do wyścigu", style=discord.ButtonStyle.green)
+
+        async def callback(self, button_interaction: Interaction):
+            challenger_id = interaction.user.id
+            joiner_id = button_interaction.user.id
+
+            if joiner_id == challenger_id:
+                await button_interaction.response.send_message("❌ Nie możesz dołączyć do własnego wyścigu.", ephemeral=True)
+                return
+
+            dane = wczytaj_dane()
+            gracz1 = dane["gracze"].get(str(challenger_id))
+            gracz2 = dane["gracze"].get(str(joiner_id))
+
+            if not gracz2 or not gracz2.get("auto_prywatne"):
+                await button_interaction.response.send_message("❌ Musisz mieć prywatne auto, aby dołączyć.", ephemeral=True)
+                return
+
+            fee = ACTIVE_RACES.pop(challenger_id)["fee"]
+
+            if gracz1["pieniadze"] < fee or gracz2["pieniadze"] < fee:
+                await button_interaction.response.send_message("❌ Obaj gracze muszą mieć wystarczająco pieniędzy.", ephemeral=True)
+                return
+
+            # Odejmij wpisowe
+            gracz1["pieniadze"] -= fee
+            gracz2["pieniadze"] -= fee
+
+            auto1 = gracz1["auto_prywatne"]
+            auto2 = gracz2["auto_prywatne"]
+
+            def oblicz_moc(auto):
+                bazowa = next((a["moc_bazowa"] for a in KATALOG_AUT if a["brand"] == auto["brand"] and a["model"] == auto["model"]), 0)
+                bonus = sum(auto["tuning"].get(k, 0) * 5 for k in auto["tuning"])
+                return bazowa + bonus
+
+            moc1 = oblicz_moc(auto1)
+            moc2 = oblicz_moc(auto2)
+
+            embed = Embed(
+                title="🏁 Wyścig uliczny!",
+                description=f"{bot.get_user(challenger_id).mention} vs {button_interaction.user.mention}\nStart za 3 sekundy...",
+                color=Color.orange()
+            )
+            await button_interaction.response.send_message(embed=embed)
+            await asyncio.sleep(3)
+
+            msg = await button_interaction.followup.send(embed=Embed(title="🏁 Wyścig trwa!", description="🔥 Start!", color=Color.blurple()), wait=True)
+
+            czas_wyscigu = random.randint(10, 20)
+            for _ in range(czas_wyscigu):
+                komentarz = random.choice(COMMENTARY_MESSAGES).format(driver1=bot.get_user(challenger_id).name, driver2=button_interaction.user.name)
+                await msg.edit(embed=Embed(title="🏁 Wyścig trwa!", description=komentarz, color=Color.blurple()))
+                await asyncio.sleep(2)
+
+            wynik1 = moc1 + random.randint(-20, 20)
+            wynik2 = moc2 + random.randint(-20, 20)
+
+            winner_id = challenger_id if wynik1 > wynik2 else joiner_id
+            suma = fee * 2
+            dane["gracze"][str(winner_id)]["pieniadze"] += suma
+
+            zapisz_dane(dane)
+
+            await msg.edit(embed=Embed(
+                title="🏁 Wyścig zakończony!",
+                description=f"Zwycięzca: {bot.get_user(winner_id).mention}\nWygrywa {suma} zł!",
+                color=Color.green()
+            ))
+
+    view = View()
+    view.add_item(DolaczButton())
+
+    embed = Embed(
+        title="🏁 Nowy wyścig uliczny!",
+        description=f"🏎️ {interaction.user.mention} hostuje wyścig!\n💰 Wpisowe: **{wpisowe} zł**\nKliknij przycisk, aby dołączyć!",
+        color=Color.blurple()
     )
+    await interaction.response.send_message(embed=embed, view=view)
     
 @bot.tree.command(name="zaakceptuj_wyscig", description="Zaakceptuj zaproszenie na wyścig")
 async def zaakceptuj_wyscig(interaction: Interaction):
