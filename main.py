@@ -1803,6 +1803,13 @@ async def wyscig(interaction: Interaction, wpisowe: int):
             color=discord.Color.blue()
         )
         await channel.send(embed=embed)
+        await channel.send(embed=wynik_embed)
+
+        # 👉 Rozlicz zakłady
+        await rozlicz_zaklady(winner_id, channel)
+
+        # 👉 Resetuj aktywny wyścig
+        ACTIVE_RACE = None
     
 @bot.tree.command(name="zaakceptuj_wyscig", description="Zaakceptuj zaproszenie na wyścig")
 async def zaakceptuj_wyscig(interaction: Interaction):
