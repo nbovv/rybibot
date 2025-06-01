@@ -14,6 +14,8 @@ from discord import Interaction
 from discord import Embed, Color
 from discord.ui import View, Button
 
+BETS = {}
+
 DATA_FILE = "/var/data/dealer_data.json"
 
 with open("auta.json", "r", encoding="utf-8") as f:
@@ -1750,13 +1752,38 @@ async def obstaw(interaction: Interaction, kto: int, kwota: int):
     user_id = str(interaction.user.id)
 
     gracz = dane["gracze"].get(user_id)
-    if not gracz or kwota <= 0 or gracz["pieniadze"] < kwota:
+    if not gracz:
+        await interaction.response.send_message("❌ Nie masz konta gracza.", ephemeral=True)
+        return
+
+    if kwota <= 0:
+        await interaction.response.send_message("❌ Kwota zakładu musi być większa niż 0.", ephemeral=True)
+        return
+
+    if gracz["pieniadze"] < kwota:
         await interaction.response.send_message("❌ Nie masz tyle pieniędzy na zakład.", ephemeral=True)
         return
 
+    # Sprawdź czy gracz, na którego obstawiamy, bierze udział w jakimś wyścigu
+    aktywni = []
+    for race in ACTIVE_RACES.values():
+        aktywni.append(race["challenger"])
+        aktywni.append(race.get("joiner"))  # jeśli dołączony
+
+    if kto not in aktywni:
+        await interaction.response.send_message("❌ Ten gracz nie bierze udziału w żadnym wyścigu.", ephemeral=True)
+        return
+
+    # Odejmij pieniądze i zapisz zakład
     gracz["pieniadze"] -= kwota
     BETS.setdefault(kto, []).append((interaction.user.id, kwota))
-    await interaction.response.send_message(f"✅ Obstawiono {kwota} zł na {bot.get_user(kto).name}", ephemeral=True)
+
+    zapisz_dane(dane)
+
+    obstawiany = bot.get_user(kto)
+    obstawiony_nick = obstawiany.name if obstawiany else f"Gracz o ID {kto}"
+
+    await interaction.response.send_message(f"✅ Obstawiono **{kwota} zł** na **{obstawiony_nick}**", ephemeral=True)
 
 # Dodaj obsługę wypłat dla poprawnych zakładów w `zaakceptuj_wyscig`:
 #   if BETS.get(winner_id):
