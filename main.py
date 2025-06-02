@@ -1729,82 +1729,31 @@ async def wyscig(interaction: Interaction, wpisowe: int):
         await msg.edit(embed=Embed(title="🏁 Wyścig trwa!", description=komentarz, color=Color.blurple()))
         await asyncio.sleep(2)  # komentarze co 2 sekundy
 
-        wynik1 = moc1 + random.randint(-20, 20)
-        wynik2 = moc2 + random.randint(-20, 20)
+            wynik1 = moc1 + random.randint(-20, 20)
+            wynik2 = moc2 + random.randint(-20, 20)
 
-        if wynik1 == wynik2:
-            winner_id = random.choice([challenger_id, joiner_id])
-        else:
-            winner_id = challenger_id if wynik1 > wynik2 else joiner_id
+            if wynik1 == wynik2:
+                winner_id = random.choice([challenger_id, joiner_id])
+            else:
+                winner_id = challenger_id if wynik1 > wynik2 else joiner_id
 
-        suma = wpisowe * 2
-        dane["gracze"][str(winner_id)]["pieniadze"] += suma
+            suma = wpisowe * 2
+            dane["gracze"][str(winner_id)]["pieniadze"] += suma
 
     # Tworzymy embed z wynikiem
-        wynik_embed = Embed(
-            title="🏁 Wyścig zakończony!",
-            description=(
-                f"Zwycięzca: {bot.get_user(winner_id).mention}\n"
-                f"Wygrywa {suma} zł!\n"
-            ),
-            color=Color.green()
-        )
-        await msg.edit(embed=wynik_embed)
-
-    # Rozliczamy zakłady
-        async def rozlicz_zaklady(winner_id: int, channel: discord.TextChannel):
-            global BETS
-            dane = wczytaj_dane()
-
-            zwyciezcy = BETS.get(winner_id, [])
-            przegrani = []
-
-            if ACTIVE_RACE:
-                przegrany_id = ACTIVE_RACE["challenger_id"] if winner_id != ACTIVE_RACE["challenger_id"] else ACTIVE_RACE["joiner_id"]
-                przegrani = BETS.get(przegrany_id, [])
-
-            tekst = ""
-
-            if not zwyciezcy and not przegrani:
-                tekst = "⚠️ Nikt nie obstawiał tego wyścigu."
-            else:
-                tekst += "**🎯 Wyniki zakładów:**\n"
-                total_lost = sum(kasa for _, kasa in przegrani)
-
-                for user_id, kwota in zwyciezcy:
-                    gracz = dane["gracze"].get(str(user_id))
-                    if gracz:
-                        wygrana = kwota * 2
-                        gracz["pieniadze"] += wygrana
-                        tekst += f"<@{user_id}> wygrał **{wygrana} zł** (x2 za trafny zakład)\n"
-
-                if przegrani:
-                    tekst += "\n❌ Poniższe osoby przegrały zakłady:\n"
-                    for user_id, kwota in przegrani:
-                        tekst += f"<@{user_id}> stracił **{kwota} zł**\n"
-
-                if zwyciezcy and przegrani and total_lost > 0:
-                    bonus_per_winner = total_lost // len(zwyciezcy)
-                    for user_id, _ in zwyciezcy:
-                        gracz = dane["gracze"].get(str(user_id))
-                        if gracz:
-                            gracz["pieniadze"] += bonus_per_winner
-                    tekst += f"\n💰 Dodatkowo każdy zwycięzca otrzymał **{bonus_per_winner} zł** z przegranej puli."
-
-            zapisz_dane(dane)
-            BETS.clear()
-
-            zaklad_embed = discord.Embed(
-                title="📊 Rozliczenie zakładów",
-                description=tekst,
-                color=discord.Color.blue()
+            wynik_embed = Embed(
+                title="🏁 Wyścig zakończony!",
+                description=(
+                    f"Zwycięzca: {bot.get_user(winner_id).mention}\n"
+                    f"Wygrywa {suma} zł!\n"
+                ),
+                color=Color.green()
             )
-            await channel.send(embed=zaklad_embed)
+            await msg.edit(embed=wynik_embed)
 
-    # ✅ Rozliczamy zakłady i kończymy wyścig
-        await rozlicz_zaklady(winner_id, channel)
-        zapisz_dane(dane)
-        ACTIVE_RACE = None
+    # Zapisujemy dane i kończymy wyścig
+            zapisz_dane(dane)
+            ACTIVE_RACE = None
     
 @bot.tree.command(name="zaakceptuj_wyscig", description="Zaakceptuj zaproszenie na wyścig")
 async def zaakceptuj_wyscig(interaction: Interaction):
