@@ -1729,31 +1729,29 @@ async def wyscig(interaction: Interaction, wpisowe: int):
         await msg.edit(embed=Embed(title="🏁 Wyścig trwa!", description=komentarz, color=Color.blurple()))
         await asyncio.sleep(2)  # komentarze co 2 sekundy
 
-            wynik1 = moc1 + random.randint(-20, 20)
-            wynik2 = moc2 + random.randint(-20, 20)
+    wynik1 = moc1 + random.randint(-20, 20)
+    wynik2 = moc2 + random.randint(-20, 20)
 
-            if wynik1 == wynik2:
-                winner_id = random.choice([challenger_id, joiner_id])
-            else:
-                winner_id = challenger_id if wynik1 > wynik2 else joiner_id
+    if wynik1 == wynik2:
+        winner_id = random.choice([challenger_id, joiner_id])
+    else:
+        winner_id = challenger_id if wynik1 > wynik2 else joiner_id
 
-            suma = wpisowe * 2
-            dane["gracze"][str(winner_id)]["pieniadze"] += suma
+    suma = wpisowe * 2
+    dane["gracze"][str(winner_id)]["pieniadze"] += suma
 
-    # Tworzymy embed z wynikiem
-            wynik_embed = Embed(
-                title="🏁 Wyścig zakończony!",
-                description=(
-                    f"Zwycięzca: {bot.get_user(winner_id).mention}\n"
-                    f"Wygrywa {suma} zł!\n"
-                ),
-                color=Color.green()
-            )
-            await msg.edit(embed=wynik_embed)
+    wynik_embed = Embed(
+        title="🏁 Wyścig zakończony!",
+        description=(
+            f"Zwycięzca: {bot.get_user(winner_id).mention}\n"
+            f"Wygrywa {suma} zł!\n"
+        ),
+        color=Color.green()
+    )
+    await msg.edit(embed=wynik_embed)
 
-    # Zapisujemy dane i kończymy wyścig
-            zapisz_dane(dane)
-            ACTIVE_RACE = None
+    zapisz_dane(dane)
+    ACTIVE_RACE = None
     
 @bot.tree.command(name="zaakceptuj_wyscig", description="Zaakceptuj zaproszenie na wyścig")
 async def zaakceptuj_wyscig(interaction: Interaction):
