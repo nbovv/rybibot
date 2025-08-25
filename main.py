@@ -1837,8 +1837,8 @@ async def on_message(message):
         await bot.process_commands(message)
 
 # ID użytkownika i kanału, który obserwujemy
-TARGET_USER_ID = 775625819116273684  # <-- wpisz ID użytkownika
-TARGET_CHANNEL_ID = 1365203566138232894  # <-- wpisz ID kanału
+TARGET_USER_ID = 1028333130106552431  # <-- wpisz ID użytkownika
+TARGET_CHANNEL_ID = 1303026999648063540  # <-- wpisz ID kanału
 GIF_URL = "https://tenor.com/view/eminem-gif-10462713928461768032"
 
 # Przechowujemy kiedy ostatni raz wysłaliśmy GIF-a
