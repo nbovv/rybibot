@@ -1836,7 +1836,32 @@ async def on_message(message):
 
         await bot.process_commands(message)
 
+# ID użytkownika i kanału, który obserwujemy
+TARGET_USER_ID = 775625819116273684  # <-- wpisz ID użytkownika
+TARGET_CHANNEL_ID = 1365203566138232894  # <-- wpisz ID kanału
+GIF_URL = "https://tenor.com/view/eminem-gif-10462713928461768032"
 
+# Przechowujemy kiedy ostatni raz wysłaliśmy GIF-a
+last_gif_sent = {}
+
+@bot.event
+async def on_message(message: discord.Message):
+    # Ignoruj wiadomości od bota
+    if message.author.bot:
+        return
+
+    # Sprawdź czy to wiadomość od konkretnej osoby w konkretnym kanale
+    if message.author.id == TARGET_USER_ID and message.channel.id == TARGET_CHANNEL_ID:
+        now = datetime.utcnow()
+        last_time = last_gif_sent.get(message.author.id)
+
+        # Jeśli pierwszy raz lub minęło 24h od ostatniego GIF-a
+        if not last_time or (now - last_time) >= timedelta(hours=24):
+            await message.reply(GIF_URL)
+            last_gif_sent[message.author.id] = now
+
+    # Ważne, żeby bot dalej obsługiwał inne komendy
+    await bot.process_commands(message)
     
 # keep_alive()
 
