@@ -807,7 +807,7 @@ GIF_URL = "https://tenor.com/view/eminem-gif-10462713928461768032"
 # Przechowujemy kiedy ostatni raz wysłaliśmy GIF-a
 last_gif_sent = {}
 
-from discord.ui import View, Button, Modal, TextInput
+from discord.ui import View, Modal, TextInput
 
 SUPPORT_CHANNEL_ID = 1365203566138232894  # kanał z panelem
 MOD_LOG_CHANNEL_ID = 1365389798830903336  # kanał dla administracji
@@ -817,10 +817,8 @@ class NickModal(Modal, title="🎮 Podaj swój nick w Minecraft"):
     nick = TextInput(label="Twój nick w Minecraft", placeholder="Wpisz swój nick tutaj", required=True)
 
     async def on_submit(self, interaction: discord.Interaction):
-        # Potwierdzenie dla gracza
         await interaction.response.send_message("✅ Twój nick został wysłany do administracji.", ephemeral=True)
 
-        # Wysyłamy zgłoszenie do kanału logów
         log_channel = interaction.client.get_channel(MOD_LOG_CHANNEL_ID)
         if log_channel:
             embed = discord.Embed(
@@ -835,13 +833,12 @@ class NickModal(Modal, title="🎮 Podaj swój nick w Minecraft"):
 class NickView(View):
     def __init__(self):
         super().__init__(timeout=None)
-        self.add_item(Button(label="Podaj nick", style=discord.ButtonStyle.primary, custom_id="nick_button"))
 
     @discord.ui.button(label="Podaj nick", style=discord.ButtonStyle.primary, custom_id="nick_button")
-    async def button_callback(self, interaction: discord.Interaction, button: Button):
+    async def button_callback(self, interaction: discord.Interaction, button):
         await interaction.response.send_modal(NickModal())
 
-# Wysyłanie panelu na kanał
+# Wysyłanie panelu na kanał (raz po starcie)
 @bot.event
 async def on_ready():
     await bot.wait_until_ready()
