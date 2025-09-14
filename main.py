@@ -847,10 +847,9 @@ async def on_ready():
         embed = discord.Embed(
             title="🎮 Nowy system wejścia na serwer Minecraft",
             description=(
-                "Whitelist została **wyłączona**!\n"
                 "Od teraz nie trzeba już podawać specyfikacji ani otwierać ticketów.\n\n"
-                "✅ Wystarczy kliknąć przycisk poniżej i wpisać swój nick w Minecraft.\n"
-                "Administracja zajmie się resztą. 🚀"
+                "Wystarczy kliknąć przycisk poniżej i wpisać swój nick w Minecraft.\n"
+                "Administracja zajmie się resztą."
             ),
             color=discord.Color.green()
         )
