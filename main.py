@@ -807,61 +807,58 @@ GIF_URL = "https://tenor.com/view/eminem-gif-10462713928461768032"
 # Przechowujemy kiedy ostatni raz wysłaliśmy GIF-a
 last_gif_sent = {}
 
-from discord.ui import View, Button
+from discord.ui import View, Button, Modal, TextInput
 
-SUPPORT_CHANNEL_ID = 1365203566138232894  # ID kanału, gdzie ma być panel
-MOD_LOG_CHANNEL_ID = 1365389798830903336  # ID kanału, gdzie ma trafiać nick
+SUPPORT_CHANNEL_ID = 1365203566138232894  # kanał z panelem
+MOD_LOG_CHANNEL_ID = 1365389798830903336  # kanał dla administracji
 
-class NickView(View):
-    def __init__(self):
-        super().__init__(timeout=None)
-        self.add_item(Button(label="Podaj nick", style=discord.ButtonStyle.primary, custom_id="nick_button"))
+# Formularz (modal) do wpisania nicku
+class NickModal(Modal, title="🎮 Podaj swój nick w Minecraft"):
+    nick = TextInput(label="Twój nick w Minecraft", placeholder="Wpisz swój nick tutaj", required=True)
 
-@bot.event
-async def on_ready():
-    await bot.wait_until_ready()
-    channel = bot.get_channel(SUPPORT_CHANNEL_ID)
-    if channel:
-        embed = discord.Embed(
-            title="🎮 Rejestracja nicku",
-            description="Kliknij przycisk poniżej i wpisz swój nick z Minecrafta, aby dołączyć na serwer.",
-            color=discord.Color.green()
-        )
-        await channel.send(embed=embed, view=NickView())
-    print("✅ Panel z przyciskiem wysłany")
+    async def on_submit(self, interaction: discord.Interaction):
+        # Potwierdzenie dla gracza
+        await interaction.response.send_message("✅ Twój nick został wysłany do administracji.", ephemeral=True)
 
-@bot.event
-async def on_interaction(interaction: discord.Interaction):
-    if not interaction.data: 
-        return
-    if interaction.data.get("custom_id") == "nick_button":
-        await interaction.response.send_message(
-            "✍️ Wpisz teraz swój nick z Minecrafta w czacie.",
-            ephemeral=True
-        )
-
-        try:
-            msg = await bot.wait_for(
-                "message",
-                timeout=60.0,
-                check=lambda m: m.author == interaction.user and m.channel == interaction.channel
-            )
-        except asyncio.TimeoutError:
-            await interaction.followup.send("⏳ Czas minął, spróbuj ponownie klikając przycisk.", ephemeral=True)
-            return
-
-        # wysyłamy zgłoszenie do kanału moderacji
-        log_channel = bot.get_channel(MOD_LOG_CHANNEL_ID)
+        # Wysyłamy zgłoszenie do kanału logów
+        log_channel = interaction.client.get_channel(MOD_LOG_CHANNEL_ID)
         if log_channel:
             embed = discord.Embed(
                 title="🆕 Nowy nick zarejestrowany",
                 color=discord.Color.blue()
             )
             embed.add_field(name="Użytkownik", value=interaction.user.mention, inline=False)
-            embed.add_field(name="Nick", value=msg.content, inline=False)
+            embed.add_field(name="Nick", value=self.nick.value, inline=False)
             await log_channel.send(embed=embed)
 
-        await interaction.followup.send("✅ Twój nick został wysłany do administracji.", ephemeral=True)
+# Widok z przyciskiem
+class NickView(View):
+    def __init__(self):
+        super().__init__(timeout=None)
+        self.add_item(Button(label="Podaj nick", style=discord.ButtonStyle.primary, custom_id="nick_button"))
+
+    @discord.ui.button(label="Podaj nick", style=discord.ButtonStyle.primary, custom_id="nick_button")
+    async def button_callback(self, interaction: discord.Interaction, button: Button):
+        await interaction.response.send_modal(NickModal())
+
+# Wysyłanie panelu na kanał
+@bot.event
+async def on_ready():
+    await bot.wait_until_ready()
+    channel = bot.get_channel(SUPPORT_CHANNEL_ID)
+    if channel:
+        embed = discord.Embed(
+            title="🎮 Nowy system wejścia na serwer Minecraft",
+            description=(
+                "Whitelist została **wyłączona**!\n"
+                "Od teraz nie trzeba już podawać specyfikacji ani otwierać ticketów.\n\n"
+                "✅ Wystarczy kliknąć przycisk poniżej i wpisać swój nick w Minecraft.\n"
+                "Administracja zajmie się resztą. 🚀"
+            ),
+            color=discord.Color.green()
+        )
+        await channel.send(embed=embed, view=NickView())
+    print("✅ Panel rejestracji nicków wysłany")
 
 #@bot.event
 #async def on_message(message: discord.Message):
