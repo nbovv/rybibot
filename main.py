@@ -811,14 +811,25 @@ from discord.ui import View, Modal, TextInput
 
 SUPPORT_CHANNEL_ID = 1365203566138232894  # kanał z panelem
 MOD_LOG_CHANNEL_ID = 1365389798830903336  # kanał dla administracji
+ROLE_ID = 1416798786902036613  # ID roli, którą dostają gracze (podmień!)
 
 # Formularz (modal) do wpisania nicku
 class NickModal(Modal, title="🎮 Podaj swój nick w Minecraft"):
     nick = TextInput(label="Twój nick w Minecraft", placeholder="Wpisz swój nick tutaj", required=True)
 
     async def on_submit(self, interaction: discord.Interaction):
-        await interaction.response.send_message("✅ Twój nick został wysłany do administracji.", ephemeral=True)
+        # Dodanie roli
+        role = interaction.guild.get_role(ROLE_ID)
+        if role:
+            try:
+                await interaction.user.add_roles(role, reason="Rejestracja nicku Minecraft")
+            except Exception as e:
+                print(f"⚠️ Nie udało się dodać roli: {e}")
 
+        # Potwierdzenie dla gracza
+        await interaction.response.send_message("✅ Twój nick został wysłany do administracji i otrzymałeś dostęp.", ephemeral=True)
+
+        # Wysyłamy zgłoszenie do kanału logów
         log_channel = interaction.client.get_channel(MOD_LOG_CHANNEL_ID)
         if log_channel:
             embed = discord.Embed(
@@ -827,6 +838,7 @@ class NickModal(Modal, title="🎮 Podaj swój nick w Minecraft"):
             )
             embed.add_field(name="Użytkownik", value=interaction.user.mention, inline=False)
             embed.add_field(name="Nick", value=self.nick.value, inline=False)
+            embed.add_field(name="Rola", value=role.mention if role else "❌ Brak roli", inline=False)
             await log_channel.send(embed=embed)
 
 # Widok z przyciskiem
@@ -849,13 +861,12 @@ async def on_ready():
             description=(
                 "Od teraz nie trzeba już podawać specyfikacji ani otwierać ticketów.\n\n"
                 "Wystarczy kliknąć przycisk poniżej i wpisać swój nick w Minecraft.\n"
-                "Administracja zajmie się resztą."
+                "Automatycznie dostaniesz dostęp do serwera."
             ),
             color=discord.Color.green()
         )
         await channel.send(embed=embed, view=NickView())
     print("✅ Panel rejestracji nicków wysłany")
-
 #@bot.event
 #async def on_message(message: discord.Message):
  #   # Ignoruj wiadomości od bota
