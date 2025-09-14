@@ -809,8 +809,8 @@ last_gif_sent = {}
 
 from discord.ui import View, Button
 
-SUPPORT_CHANNEL_ID = 123456789012345678  # ID kanału, gdzie ma być panel
-MOD_LOG_CHANNEL_ID = 234567890123456789  # ID kanału, gdzie ma trafiać nick
+SUPPORT_CHANNEL_ID = 1365203566138232894  # ID kanału, gdzie ma być panel
+MOD_LOG_CHANNEL_ID = 1365389798830903336  # ID kanału, gdzie ma trafiać nick
 
 class NickView(View):
     def __init__(self):
