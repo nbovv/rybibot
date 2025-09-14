@@ -807,6 +807,62 @@ GIF_URL = "https://tenor.com/view/eminem-gif-10462713928461768032"
 # Przechowujemy kiedy ostatni raz wysłaliśmy GIF-a
 last_gif_sent = {}
 
+from discord.ui import View, Button
+
+SUPPORT_CHANNEL_ID = 123456789012345678  # ID kanału, gdzie ma być panel
+MOD_LOG_CHANNEL_ID = 234567890123456789  # ID kanału, gdzie ma trafiać nick
+
+class NickView(View):
+    def __init__(self):
+        super().__init__(timeout=None)
+        self.add_item(Button(label="Podaj nick", style=discord.ButtonStyle.primary, custom_id="nick_button"))
+
+@bot.event
+async def on_ready():
+    await bot.wait_until_ready()
+    channel = bot.get_channel(SUPPORT_CHANNEL_ID)
+    if channel:
+        embed = discord.Embed(
+            title="🎮 Rejestracja nicku",
+            description="Kliknij przycisk poniżej i wpisz swój nick z Minecrafta, aby dołączyć na serwer.",
+            color=discord.Color.green()
+        )
+        await channel.send(embed=embed, view=NickView())
+    print("✅ Panel z przyciskiem wysłany")
+
+@bot.event
+async def on_interaction(interaction: discord.Interaction):
+    if not interaction.data: 
+        return
+    if interaction.data.get("custom_id") == "nick_button":
+        await interaction.response.send_message(
+            "✍️ Wpisz teraz swój nick z Minecrafta w czacie.",
+            ephemeral=True
+        )
+
+        try:
+            msg = await bot.wait_for(
+                "message",
+                timeout=60.0,
+                check=lambda m: m.author == interaction.user and m.channel == interaction.channel
+            )
+        except asyncio.TimeoutError:
+            await interaction.followup.send("⏳ Czas minął, spróbuj ponownie klikając przycisk.", ephemeral=True)
+            return
+
+        # wysyłamy zgłoszenie do kanału moderacji
+        log_channel = bot.get_channel(MOD_LOG_CHANNEL_ID)
+        if log_channel:
+            embed = discord.Embed(
+                title="🆕 Nowy nick zarejestrowany",
+                color=discord.Color.blue()
+            )
+            embed.add_field(name="Użytkownik", value=interaction.user.mention, inline=False)
+            embed.add_field(name="Nick", value=msg.content, inline=False)
+            await log_channel.send(embed=embed)
+
+        await interaction.followup.send("✅ Twój nick został wysłany do administracji.", ephemeral=True)
+
 #@bot.event
 #async def on_message(message: discord.Message):
  #   # Ignoruj wiadomości od bota
