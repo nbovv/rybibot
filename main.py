@@ -157,11 +157,11 @@ async def load_cogs():
             await bot.load_extension(f"cogs.{filename[:-3]}")
             print(f"🔌 Załadowano cog: {filename}")
 
-#@tasks.loop(hours=2)
-#async def wysylaj_wiadomosc():
- #   global ostatnia_wiadomosc
-  #  channel_id = 1366034718696407090  # <-- zmień na swój prawdziwy ID kanału!
-   # message = """**WYSYŁAJCIE DWA ZDJĘCIA, W NOCY I ZA DNIA (MOŻECIE POPROSTU ROLETY ZASŁONIĆ)**
+@tasks.loop(hours=2)
+async def wysylaj_wiadomosc():
+    global ostatnia_wiadomosc
+    channel_id = 1426459490936557639  # <-- zmień na swój prawdziwy ID kanału!
+    message = "**ZAKAZ KOMENTOWANIA MEMÓW NA KANALE**"
 
 #**POJEDYNCZE ZDJĘCIA BĘDĄ KASOWANE I NIE BIORĄ UDZIAŁU W KONKURSIE**
 
@@ -169,21 +169,21 @@ async def load_cogs():
 #**KOMENTOWANIE POZA WĄTKIEM = MUTE**
 #"""
 
- #   for guild in bot.guilds:
-  #      channel = guild.get_channel(channel_id)
-   #     if channel:
-    #        try:
-     #           if ostatnia_wiadomosc:
-      #              try:
-       #                 await ostatnia_wiadomosc.delete()
-        #                print(f"🗑️ Usunięto poprzednią wiadomość na kanale: {channel.name}")
-         #           except Exception as e:
-          #              print(f"⚠️ Nie udało się usunąć poprzedniej wiadomości: {e}")
+    for guild in bot.guilds:
+        channel = guild.get_channel(channel_id)
+        if channel:
+            try:
+                if ostatnia_wiadomosc:
+                    try:
+                        await ostatnia_wiadomosc.delete()
+                        print(f"🗑️ Usunięto poprzednią wiadomość na kanale: {channel.name}")
+                    except Exception as e:
+                        print(f"⚠️ Nie udało się usunąć poprzedniej wiadomości: {e}")
 
-#                ostatnia_wiadomosc = await channel.send(message)
- #               print(f"✅ Wysłano wiadomość na kanał: {channel.name}")
-  #          except Exception as e:
-   #             print(f"❌ Nie udało się wysłać wiadomości: {e}")
+                ostatnia_wiadomosc = await channel.send(message)
+                print(f"✅ Wysłano wiadomość na kanał: {channel.name}")
+            except Exception as e:
+                print(f"❌ Nie udało się wysłać wiadomości: {e}")
 
 
 
