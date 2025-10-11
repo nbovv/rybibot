@@ -160,14 +160,12 @@ async def load_cogs():
 @tasks.loop(hours=2)
 async def wysylaj_wiadomosc():
     global ostatnia_wiadomosc
-    channel_id = 1426459490936557639  # <-- zmień na swój prawdziwy ID kanału!
+    channel_id = 1426459490936557639
     message = "**ZAKAZ KOMENTOWANIA MEMÓW NA KANALE**"
 
-#**POJEDYNCZE ZDJĘCIA BĘDĄ KASOWANE I NIE BIORĄ UDZIAŁU W KONKURSIE**
-
-#**KOMENTOWAĆ MOŻECIE TYLKO W WĄTKU**
-#**KOMENTOWANIE POZA WĄTKIEM = MUTE**
-#"""
+    #**POJEDYNCZE ZDJĘCIA BĘDĄ KASOWANE I NIE BIORĄ UDZIAŁU W KONKURSIE**
+    #**KOMENTOWAĆ MOŻECIE TYLKO W WĄTKU**
+    #**KOMENTOWANIE POZA WĄTKIEM = MUTE**
 
     for guild in bot.guilds:
         channel = guild.get_channel(channel_id)
@@ -184,7 +182,8 @@ async def wysylaj_wiadomosc():
                 print(f"✅ Wysłano wiadomość na kanał: {channel.name}")
             except Exception as e:
                 print(f"❌ Nie udało się wysłać wiadomości: {e}")
-
+        else:
+            print(f"❌ Nie znaleziono kanału o ID {channel_id} w {guild.name}")
 
 
 @bot.event
