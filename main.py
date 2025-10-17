@@ -860,6 +860,33 @@ class NickView(View):
     async def button_callback(self, interaction: discord.Interaction, button):
         await interaction.response.send_modal(NickModal())
 
+# 🔄 Automatyczne tworzenie wątków pod memami
+MEMY_CHANNEL_ID = 1252320856626040926  # <-- ID kanału z memami (zmień, jeśli inny)
+
+@bot.event
+async def on_message(message: discord.Message):
+    # Ignoruj wiadomości od botów
+    if message.author.bot:
+        return
+
+    # Sprawdź, czy to kanał z memami
+    if message.channel.id == MEMY_CHANNEL_ID:
+        # Jeśli wiadomość zawiera obrazek (embed lub załącznik)
+        has_image = any(att.content_type and att.content_type.startswith("image/") for att in message.attachments)
+        has_embed_image = any(embed.image.url for embed in message.embeds if embed.image)
+
+        if has_image or has_embed_image:
+            try:
+                thread_name = f"Dyskusja o memie od {message.author.display_name}"
+                thread = await message.create_thread(name=thread_name, auto_archive_duration=1440)  # 24h
+                print(f"🧵 Utworzono wątek: {thread.name}")
+            except Exception as e:
+                print(f"⚠️ Nie udało się utworzyć wątku: {e}")
+
+    # Nie zapomnij przepuścić innych komend / eventów
+    await bot.process_commands(message)
+
+
 # Wysyłanie panelu na kanał (raz po starcie)
 #@bot.event
 #async def on_ready():
