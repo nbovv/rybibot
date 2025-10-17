@@ -181,6 +181,19 @@ async def wysylaj_wiadomosc():
         else:
             print(f"❌ Nie znaleziono kanału o ID {channel_id} w {guild.name}")
 
+@bot.event
+async def on_ready():
+    print(f"✅ Zalogowano jako {bot.user}")
+    try:
+        synced = await bot.tree.sync()
+        print(f"🌐 Slash komendy zsynchronizowane ({len(synced)}).")
+    except Exception as e:
+        print(f"❌ Błąd synchronizacji: {e}")
+
+    # 🔥 Uruchom pętlę wysyłania wiadomości o memach
+    if not wysylaj_wiadomosc.is_running():
+        wysylaj_wiadomosc.start()
+        print("🕒 Uruchomiono automatyczne wysyłanie wiadomości o memach.")
 
 @bot.event
 async def on_disconnect():
