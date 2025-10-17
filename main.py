@@ -852,22 +852,22 @@ class NickView(View):
         await interaction.response.send_modal(NickModal())
 
 # Wysyłanie panelu na kanał (raz po starcie)
-@bot.event
-async def on_ready():
-    await bot.wait_until_ready()
-    channel = bot.get_channel(SUPPORT_CHANNEL_ID)
-    if channel:
-        embed = discord.Embed(
-            title="🎮 Nowy system wejścia na serwer Minecraft",
-            description=(
-                "Od teraz nie trzeba już podawać specyfikacji ani otwierać ticketów.\n\n"
-                "Wystarczy kliknąć przycisk poniżej i wpisać swój nick w Minecraft.\n"
-                "Automatycznie dostaniesz dostęp do serwera."
-            ),
-            color=discord.Color.green()
-        )
-        await channel.send(embed=embed, view=NickView())
-    print("✅ Panel rejestracji nicków wysłany")
+#@bot.event
+#async def on_ready():
+ #   await bot.wait_until_ready()
+  #  channel = bot.get_channel(SUPPORT_CHANNEL_ID)
+   # if channel:
+    #    embed = discord.Embed(
+     #       title="🎮 Nowy system wejścia na serwer Minecraft",
+      #      description=(
+       #         "Od teraz nie trzeba już podawać specyfikacji ani otwierać ticketów.\n\n"
+        #        "Wystarczy kliknąć przycisk poniżej i wpisać swój nick w Minecraft.\n"
+         #       "Automatycznie dostaniesz dostęp do serwera."
+          #  ),
+           # color=discord.Color.green()
+       # )
+        #await channel.send(embed=embed, view=NickView())
+    #print("✅ Panel rejestracji nicków wysłany")
 #@bot.event
 #async def on_message(message: discord.Message):
  #   # Ignoruj wiadomości od bota
