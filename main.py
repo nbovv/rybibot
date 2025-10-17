@@ -161,7 +161,7 @@ async def load_cogs():
 async def wysylaj_wiadomosc():
     global ostatnia_wiadomosc
     channel_id = 1252320856626040926  # <- tu zostaw ID swojego kanału
-    message = "**ZAKAZ KOMENTOWANIA MEMÓW NA KANALE**"
+    message = "**ZAKAZ KOMENTOWANIA MEMÓW POZA WĄTKAMI**"
 
     for guild in bot.guilds:
         channel = guild.get_channel(channel_id)
