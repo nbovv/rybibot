@@ -865,26 +865,31 @@ MEMY_CHANNEL_ID = 1252320856626040926  # <-- ID kanału z memami (zmień, jeśli
 
 @bot.event
 async def on_message(message: discord.Message):
-    # Ignoruj wiadomości od botów (w tym samego bota)
     if message.author.bot:
         return
 
-    # 🪶 Logowanie wiadomości
     logging.info(f"✉️ Wiadomość od {message.author}: {message.content}")
 
-    # 🔄 Automatyczne tworzenie wątków i dodawanie reakcji pod memami
-    MEMY_CHANNEL_ID = 1252320856626040926  # <-- ID kanału z memami (zmień, jeśli inny)
+    MEMY_CHANNEL_ID = 1252320856626040926  # <-- ID kanału z memami
 
     if message.channel.id == MEMY_CHANNEL_ID:
-        # Sprawdź, czy wiadomość zawiera obrazek (plik lub embed)
-        has_image = any(att.content_type and att.content_type.startswith("image/") for att in message.attachments)
-        has_embed_image = any(embed.image and embed.image.url for embed in message.embeds)
+        # ✅ Rozszerzone wykrywanie memów (obrazy + filmiki)
+        has_attachment = any(
+            (a.content_type and (a.content_type.startswith("image/") or a.content_type.startswith("video/")))
+            or a.filename.lower().endswith((".png", ".jpg", ".jpeg", ".gif", ".mp4", ".webm"))
+            for a in message.attachments
+        )
 
-        if has_image or has_embed_image:
+        has_embed_media = any(
+            (embed.type in ("image", "video") or (embed.thumbnail and embed.thumbnail.url))
+            for embed in message.embeds
+        )
+
+        if has_attachment or has_embed_media:
             try:
                 # 🧵 Utwórz wątek
                 thread_name = f"Dyskusja o memie od {message.author.display_name}"
-                thread = await message.create_thread(name=thread_name, auto_archive_duration=1440)  # 1440 = 24h
+                thread = await message.create_thread(name=thread_name, auto_archive_duration=1440)
                 print(f"🧵 Utworzono wątek: {thread.name}")
 
                 # 👍👎 Dodaj reakcje pod memem
@@ -895,8 +900,8 @@ async def on_message(message: discord.Message):
             except Exception as e:
                 print(f"⚠️ Błąd przy tworzeniu wątku lub dodawaniu reakcji: {e}")
 
-    # Przepuszczanie innych komend
     await bot.process_commands(message)
+
 
 
 # Wysyłanie panelu na kanał (raz po starcie)
