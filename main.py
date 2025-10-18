@@ -902,6 +902,20 @@ async def on_message(message: discord.Message):
 
     await bot.process_commands(message)
 
+# 🗳️ Usuwanie wiadomości po zakończeniu ankiet
+ANKIETY_CHANNEL_ID = 1365399336426405982  # <-- wpisz tu ID kanału z ankietami
+
+@bot.listen("on_message")
+async def usun_wiadomosci_z_ankiet(message: discord.Message):
+    if message.channel.id == ANKIETY_CHANNEL_ID and message.type == discord.MessageType.poll_result:
+        try:
+            await message.delete()
+            print(f"🗑️ Usunięto wiadomość z zakończonej ankiety w {message.channel.name}")
+        except Exception as e:
+            print(f"⚠️ Nie udało się usunąć wiadomości z ankiety: {e}")
+
+# Uruchomienie bota
+bot.run(TOKEN)
 
 
 # Wysyłanie panelu na kanał (raz po starcie)
