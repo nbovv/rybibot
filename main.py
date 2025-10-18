@@ -903,7 +903,7 @@ async def on_message(message: discord.Message):
     await bot.process_commands(message)
 
 # 🗳️ Usuwanie wiadomości po zakończeniu ankiet
-ANKIETY_CHANNEL_ID = 1365399336426405982  # <-- wpisz tu ID kanału z ankietami
+ANKIETY_CHANNEL_ID = 1274829126817157161  # <-- wpisz tu ID kanału z ankietami
 
 @bot.listen("on_message")
 async def usun_wiadomosci_z_ankiet(message: discord.Message):
